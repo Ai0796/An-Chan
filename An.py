@@ -6,8 +6,8 @@ import time
 import asyncio
 import traceback
 from bisect import bisect_left
-from checkinButtons import CheckInButtons
-from openslots import OpenSlots
+from classes.checkinButtons import CheckInButtons
+from classes.openslots import OpenSlots
 from pytz import timezone
 
 bot = commands.Bot()
