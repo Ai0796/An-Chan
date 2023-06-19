@@ -16,6 +16,9 @@ class BaseRequest:
     SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
     EVENTPATH = 'config/events.json'
     
+    def __init__(self, token):
+        self.token = token
+    
     def excel_cols(self, n):
         if n < 1:
             raise ValueError("Number must be positive")
@@ -27,14 +30,20 @@ class BaseRequest:
             else:
                 return chr(n + ord('A') - 1) + result
 
-    async def lookup(spreadsheet, query, sheetId):
+    async def lookup(self, spreadsheet, query, sheetId):
         return spreadsheet.values().get(spreadsheetId=sheetId,
                                             range=query).execute()
-    async def lookupBatch(spreadsheet, queries, sheetId):
+    async def lookupBatch(self, spreadsheet, queries, sheetId):
         return spreadsheet.values().batchGet(spreadsheetId=sheetId,
                                         ranges=queries).execute()    
+        
+    def getTeamSheet(self, sheets):
+        return None
+    
+    def getScheduleSheets(self, sheets):
+        return None
 
-    def parseBp(bp):
+    def parseBp(self, bp):
         if (str == ''):
             return 0
         filteredStr = re.sub('[^0-9]', '', bp)
@@ -44,15 +53,15 @@ class BaseRequest:
         return val
         
     
-    def refreshCreds():
+    def refreshCreds(self):
         # The file token.json stores the user's access and refresh tokens, and is
         # created automatically when the authorization flow completes for the first
         # time.
         
         creds = None
         
-        if os.path.exists('token.json'):
-            creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+        if os.path.exists(self.token):
+            creds = Credentials.from_authorized_user_file('token.json', self.SCOPES)
         # If there are no (valid) credentials available, let the user log in.
         if not creds or not creds.valid:
             print('refreshing creds')
@@ -60,23 +69,23 @@ class BaseRequest:
                 creds.refresh(Request())
             else:
                 flow = InstalledAppFlow.from_client_secrets_file(
-                    'credentials.json', SCOPES)
+                    'credentials.json', self.SCOPES)
                 creds = flow.run_local_server(port=0)
             # Save the credentials for the next run
-            with open('token.json', 'w') as token:
+            with open(self.token, 'w') as token:
                 token.write(creds.to_json())
                 
-        creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+        creds = Credentials.from_authorized_user_file('token.json', self.SCOPES)
                 
         print('returning creds')
                 
         return creds
 
 
-    def getCurrentEvent(timestamp):
+    def getCurrentEvent(self, timestamp):
         timestamp = int(timestamp * 1000)
         print(timestamp)
-        with open(EVENTPATH, 'r', encoding='utf8') as f:
+        with open(self.EVENTPATH, 'r', encoding='utf8') as f:
             eventData = rapidjson.load(f)[::]
         f.close()
         for i, event in enumerate(eventData):
@@ -88,7 +97,7 @@ class BaseRequest:
 
         return None
 
-    async def getAllOpenSlots(creds, sheetId, eventData):
+    async def getAllOpenSlots(self, creds, sheetId, eventData):
         """
         Gets all open slots for the current event
         
@@ -98,7 +107,7 @@ class BaseRequest:
 
         return None
         
-async def getOpenSlots(spreadsheet, titles, sheetId):
+async def getOpenSlots(self, spreadsheet, titles, sheetId):
     """
     Gets open slots for a specific page in the spreadsheet
 
@@ -109,14 +118,14 @@ async def getOpenSlots(spreadsheet, titles, sheetId):
     """
     return None
 
-async def getNames(spreadsheet, title, sheetId, userid):
+async def getNames(self, spreadsheet, title, sheetId, userid):
 
     """
     Gets all names from the "teams" page of a spreadsheet
     """
     return None
 
-async def getUsers(spreadsheet, titles, sheetId, names):
+async def getUsers(self, spreadsheet, titles, sheetId, names):
     """
     Gets all users from the schedule that matches the given list of names
 
@@ -128,7 +137,7 @@ async def getUsers(spreadsheet, titles, sheetId, names):
     """
     return None
 
-async def getUserVals(creds, sheetId, userid, eventData):
+async def getUserVals(self, creds, sheetId, userid, eventData):
     """
     Gets all placements of a specific user from all pages of a spreadsheet
     
@@ -138,7 +147,7 @@ async def getUserVals(creds, sheetId, userid, eventData):
     
     return None
 
-async def getLookups(spreadsheet, titles, sheetId) -> list:
+async def getLookups(self, spreadsheet, titles, sheetId) -> list:
     """Gets required lookups for checkin and order lookups
 
     Args:
@@ -150,12 +159,12 @@ async def getLookups(spreadsheet, titles, sheetId) -> list:
         list: _description_
     """
 
-async def getVals(spreadsheet, combinedLookup, colIndexes, sheetId) -> dict:
+async def getVals(self, spreadsheet, combinedLookup, colIndexes, sheetId) -> dict:
     """
     Gets all order and check in values for all given lookups
     """
 
-async def main(creds, sheetId) -> dict:
+async def main(self, creds, sheetId) -> dict:
     """
     Gets all orders and check ins for all users
     
