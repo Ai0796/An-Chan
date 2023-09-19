@@ -1,6 +1,6 @@
 from discord.ext import commands
 import time
-from checkinButtons import CheckInButtons
+from embeds.CheckInButtons import CheckInButtons
 
 class ViewCheckIn(commands.Cog):
     def __init__(self, bot):
