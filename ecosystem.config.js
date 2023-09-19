@@ -19,6 +19,13 @@ module.exports = {
     watch: false,
     ignore_watch: '.',
     interpreter: 'python3'
+  },
+  {
+    name: 'loader',
+    script: 'loadGameData.js',
+    watch: false,
+    ignore_watch: '.',
+    interpreter: 'node'
   }
   ],
 

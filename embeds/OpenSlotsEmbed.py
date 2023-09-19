@@ -2,7 +2,7 @@ import discord
 from bisect import bisect_left
 import time
 
-class OpenSlots(discord.ui.View):
+class OpenSlotsEmbed(discord.ui.View):
     
     def __init__(self, dayindexes, timestamps, slots, start):
         super().__init__(timeout=30)
