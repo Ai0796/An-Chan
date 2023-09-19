@@ -6,10 +6,10 @@ import time
 import asyncio
 import traceback
 from bisect import bisect_left
-from classes.checkinButtons import CheckInButtons
-from classes.openslots import OpenSlots
+from embeds.CheckInButtons import CheckInButtons
+from embeds.OpenSlotsEmbed import OpenSlots
 from pytz import timezone
-from meiyarequest import main, refreshCreds, getUserVals, getAllOpenSlots
+from requests.meiyarequest import main, refreshCreds, getUserVals, getAllOpenSlots
 import re
 
 bot = commands.Bot()

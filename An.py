@@ -4,17 +4,12 @@ import rapidjson
 from datetime import datetime, timedelta
 import time
 import asyncio
-<<<<<<< HEAD
-from checkinButtons import CheckInButtons
-=======
-import traceback
-from bisect import bisect_left
-from classes.checkinButtons import CheckInButtons
-from classes.openslots import OpenSlots
->>>>>>> 918c16b14ac8f67325046363b7a9369592853ac9
 from pytz import timezone
 from Config import Config
+from embeds.CheckInButtons import CheckInButtons
+
 import logging
+
 logger = logging.getLogger('discord')
 logger.setLevel(logging.DEBUG)
 handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
@@ -42,8 +37,8 @@ DCs = {}
 
 DCCommands = discord.SlashCommandGroup('dc', 'Commands related to DCing')
     
-import googlerequest
-import haikurequest
+import requests.ai0 as ai0
+import requests.haikurequest as haikurequest
     
 class An(commands.Bot):
     
@@ -61,7 +56,7 @@ class An(commands.Bot):
         self.DCCommands = discord.SlashCommandGroup('dc', 'Commands related to DCing')
         
         self.profiles = {
-            "An": googlerequest,
+            "An": ai0,
             "Toya": haikurequest
         }
         

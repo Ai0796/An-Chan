@@ -6,12 +6,12 @@ from datetime import datetime, timedelta
 import time
 import re
 import asyncio
-from haikurequest import main, refreshCreds, getUserVals
+from requests.haikurequest import main, refreshCreds, getUserVals
 import traceback
 import aiohttp
 from bisect import bisect_left
-from classes.checkinButtons import CheckInButtons
-from classes.openslots import OpenSlots
+from embeds.CheckInButtons import CheckInButtons
+from embeds.OpenSlotsEmbed import OpenSlots
 
 bot = commands.Bot()
 
