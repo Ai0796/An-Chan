@@ -11,6 +11,8 @@ from bisect import bisect_left
 import numpy as np
 import itertools
 import rapidjson
+from classes.Player import Player
+from classes.TimeData import TimeData
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
@@ -50,68 +52,6 @@ def parseBp(bp):
     if (val < 1000):
         val *= 1000
     return val
-
-
-class Player:
-
-    maxLength = 40
-    mobileLength = 31
-
-    def __init__(self, name, lead, team, bp):
-        self.name = name.strip()
-        self.lead = int(lead)
-        self.team = int(team)
-        self.isv = lead + (team - lead)/5.0
-        self.bp = bp
-
-    def __str__(self):
-        return f'{self.name} | {self.lead}/{self.team}/{self.bp/1000:.0f}k'
-
-    def tostr(self, mobile, maxLength):
-        str = f' | {self.lead}/{self.team}/{self.bp/1000:.0f}k'
-        length = len(str) + maxLength
-
-        if (mobile):
-            padding = self.mobileLength - length + 1
-        else:
-            padding = self.maxLength - length + 1
-
-        str = f'{self.name}' + ' ' * (maxLength - len(self.name))
-
-        if padding < 0:
-            str = str[:padding]
-
-        str += f' | {self.lead}/{self.team}/{self.bp/1000:.0f}k'
-
-        return str
-
-
-class TimeData:
-    """
-    Contains information for a single timestamp
-    """
-
-    def __init__(self, timestamp, orders, checkIns):
-        self.timestamp = timestamp
-        self.orders = orders
-        self.checkIns = checkIns
-
-    def addOrder(self, order):
-        self.orders.append(order)
-
-    def addCheckIn(self, player):
-        self.checkIns.append(player)
-
-    def getOrders(self):
-        return self.orders
-
-    def getCheckIns(self):
-        return self.checkIns
-
-    def add(self, timeData):
-        self.orders.extend(timeData.orders)
-        self.checkIns.extend(timeData.checkIns)
-
 
 def refreshCreds():
     # The file token.json stores the user's access and refresh tokens, and is
