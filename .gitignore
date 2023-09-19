@@ -5,3 +5,6 @@ token.json
 tokenCalendar.json
 Kohane.py
 __pycache__
+
+*.log
+*.gif
