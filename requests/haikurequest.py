@@ -36,7 +36,12 @@ def parseBp(bp):
     val = int(filteredStr)
     if (val < 1000):
         val *= 1000
+<<<<<<< HEAD:haikurequest.py
     return val
+=======
+    return val;
+        
+>>>>>>> 918c16b14ac8f67325046363b7a9369592853ac9:requests/haikurequest.py
     
 def refreshCreds():
     # The file token.json stores the user's access and refresh tokens, and is

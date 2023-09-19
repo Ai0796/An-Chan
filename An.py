@@ -4,7 +4,14 @@ import rapidjson
 from datetime import datetime, timedelta
 import time
 import asyncio
+<<<<<<< HEAD
 from checkinButtons import CheckInButtons
+=======
+import traceback
+from bisect import bisect_left
+from classes.checkinButtons import CheckInButtons
+from classes.openslots import OpenSlots
+>>>>>>> 918c16b14ac8f67325046363b7a9369592853ac9
 from pytz import timezone
 from Config import Config
 import logging

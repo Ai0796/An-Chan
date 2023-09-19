@@ -10,8 +10,8 @@ from haikurequest import main, refreshCreds, getUserVals
 import traceback
 import aiohttp
 from bisect import bisect_left
-from checkinButtons import CheckInButtons
-from openslots import OpenSlots
+from classes.checkinButtons import CheckInButtons
+from classes.openslots import OpenSlots
 
 bot = commands.Bot()
 
