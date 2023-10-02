@@ -9,7 +9,7 @@ from bisect import bisect_left
 from embeds.CheckInButtons import CheckInButtons
 from embeds.OpenSlotsEmbed import OpenSlots
 from pytz import timezone
-from requests.meiyarequest import main, refreshCreds, getUserVals, getAllOpenSlots
+from requestsTypes.meiyarequest import main, refreshCreds, getUserVals, getAllOpenSlots
 import re
 
 bot = commands.Bot()

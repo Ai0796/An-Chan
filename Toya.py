@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 import time
 import re
 import asyncio
-from requests.haikurequest import main, refreshCreds, getUserVals
+from requestsTypes.haikurequest import main, refreshCreds, getUserVals
 import traceback
 import aiohttp
 from bisect import bisect_left

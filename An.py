@@ -37,8 +37,8 @@ DCs = {}
 
 DCCommands = discord.SlashCommandGroup('dc', 'Commands related to DCing')
     
-import requests.ai0 as ai0
-import requests.haikurequest as haikurequest
+from requestsTypes.ai0 import ai0
+import requestsTypes.haikurequest as haikurequest
     
 class An(commands.Bot):
     
@@ -56,7 +56,7 @@ class An(commands.Bot):
         self.DCCommands = discord.SlashCommandGroup('dc', 'Commands related to DCing')
         
         self.profiles = {
-            "An": ai0,
+            "An": ai0('token.json'),
             "Toya": haikurequest
         }
         
