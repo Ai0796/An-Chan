@@ -1,12 +1,12 @@
 from discord.ext import commands
-from discord.ext.commands import has_permissions
+from discord import default_permissions
 
 class RemoveCheckIn(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @has_permissions(manage_messages=True)
     @commands.slash_command(name="removecheckin", description="Removes the check in channel")
+    @default_permissions(manage_messages=True)
     async def removecheckin(self, ctx):
 
         self.bot.config.setCheckInChannel(ctx.guild.id, None)
