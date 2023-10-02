@@ -182,7 +182,7 @@ class ai0(BaseRequest):
             lookups.append(timestampLookup)
             timestampIndexes.append(timestampIndex)
 
-        result = await self.lookupBatch(self, spreadsheet, lookups, sheetId)
+        result = await self.lookupBatch(spreadsheet, lookups, sheetId)
         
         values = result.get('valueRanges', 0)
         hours = []
@@ -342,7 +342,7 @@ class ai0(BaseRequest):
 
         return timestampDict
 
-    async def getOrders(self, creds, sheetId) -> dict:
+    async def main(self, creds, sheetId) -> dict:
         """
         Shows basic usage of the Sheets API.
         Prints values from a sample spreadsheet.
