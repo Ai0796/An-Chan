@@ -195,6 +195,126 @@ class ai0(BaseRequest):
                         hours.append([int(timestamp[-1]), 0])
                     
         return hours
+    
+    async def getNameDic(self, spreadsheet, title, sheetId):
+
+        nameDic = {}
+        query = '1:1'
+        result = await self.lookup(spreadsheet, f'{title}!{query}', sheetId)
+        values = result.get('values', [])[0]
+
+        values = '|'.join(values).lower().split('|')
+
+        nameIndex = values.index('name')
+        idIndex = values.index('discord id')
+
+        minVal = min(nameIndex, idIndex)
+        maxVal = max(nameIndex, idIndex)
+
+        minColumn = self.excel_cols(minVal + 1)
+        maxColumn = self.excel_cols(maxVal + 1)
+
+        combinedLookup = f'{title}!{minColumn}2:{maxColumn}1001'
+
+        result = await self.lookup(spreadsheet, combinedLookup, sheetId)
+
+        values = result.get('values', [])
+
+        for row in values:
+            if len(row) < maxVal - minVal + 1:
+                continue
+            if row[nameIndex - minVal]:
+                nameDic[row[nameIndex - minVal]] = row[idIndex - minVal]
+
+        return nameDic
+    
+    async def getUserIds(self, spreadsheet, titles, sheetId, nameDic):
+
+        query = '3:3'
+        lookups = []
+        for title in titles:
+            lookups.append(f'{title}!{query}')
+
+        result = await self.lookupBatch(spreadsheet, lookups, sheetId)
+        values = result.get('valueRanges', 0)
+        values = [x['values'] for x in values]
+
+        lookups = []
+        timestampIndexes = []
+
+        for valueSets, title in zip(values, titles):
+
+            valueSets = valueSets[0]
+
+            valueSets = '|'.join(valueSets).lower().split('|')
+
+            playerIndexes = [i for i, x in enumerate(valueSets) if x in [
+                'p1', 'p2', 'p3', 'p4', 'p5']]
+
+            minVal = min(playerIndexes)
+            maxVal = max(playerIndexes)
+
+            timestampIndex = valueSets.index('timestamp')
+
+            combinedLookup = f'{title}!{self.excel_cols(minVal + 1)}4:{self.excel_cols(maxVal + 1)}27'
+            timestampLookup = f'{title}!{self.excel_cols(timestampIndex + 1)}4:{self.excel_cols(timestampIndex + 1)}27'
+
+            lookups.append(combinedLookup)
+            lookups.append(timestampLookup)
+            timestampIndexes.append(timestampIndex)
+
+        result = await self.lookupBatch(spreadsheet, lookups, sheetId)
+
+        values = result.get('valueRanges', 0)
+        pings = []
+        for i in range(0, len(values), 2):
+            if 'values' in values[i] and 'values' in values[i + 1]:
+                for players, timestamp in zip(values[i]['values'], values[i + 1]['values']):
+                    if len(players) <= 0:
+                        continue
+                    pings.append([int(timestamp[-1]), [nameDic[x] for x in players if x in nameDic]])
+
+        return pings
+    
+    async def getPings(self, creds, sheetId, eventData):
+        try:
+            service = build('sheets', 'v4', credentials=creds)
+
+            # Call the Sheets API
+            spreadsheet = service.spreadsheets()
+            sheet_metadata = spreadsheet.get(spreadsheetId=sheetId).execute()
+            sheets = sheet_metadata.get('sheets', '')
+
+            teams = None
+            days = []
+            for sheet in sheets:
+                if sheet['properties']['title'].lower().strip() == 'teams':
+                    teams = sheet['properties']['title']
+
+                if sheet['properties']['title'].lower().strip().startswith('day'):
+                    days.append(sheet['properties']['title'])
+
+            nameDic = await self.getNameDic(spreadsheet, teams, sheetId)
+
+            if len(nameDic) < 1:
+                return []
+
+            hours = await self.getUserIds(spreadsheet, days, sheetId, nameDic)
+            
+            hourDic = {
+                timestamp: set() for timestamp in np.arange(int(eventData['startAt']/1000), int(eventData['rankingAnnounceAt']/1000), 3600)}
+
+            for hour in hours:
+                if hour[0] not in hourDic:
+                    continue
+                hourDic[hour[0]].update(hour[1])
+
+            hourDic = {k: v for k, v in sorted(
+                hourDic.items(), key=lambda item: item[0])}
+            return hourDic
+
+        except HttpError as err:
+            print(err)
 
     async def getUserVals(self, creds, sheetId, userid, eventData):
         """
