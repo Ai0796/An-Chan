@@ -1,10 +1,12 @@
-config
-configLemo
+config*
 credentials.json
 token.json
 tokenCalendar.json
 Kohane.py
 __pycache__
+node_modules
+ecosystem.config.js
 
 *.log
 *.gif
+*.png
