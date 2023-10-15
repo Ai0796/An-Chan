@@ -6,6 +6,8 @@ Kohane.py
 __pycache__
 node_modules
 ecosystem.config.js
+Lemo.py
+Toya.py
 
 *.log
 *.gif
