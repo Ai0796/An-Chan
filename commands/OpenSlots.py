@@ -26,12 +26,20 @@ class OpenSlots(commands.Cog):
 
         timestamps = [x * 3600 + int(event['startAt']/1000)
                     for x in range(len(data))]
-        days = [event['startAt']/1000 - 3600 * 15]
+        days = [int(event['startAt']/1000 - 3600 * 15)]
         while days[-1] < event['rankingAnnounceAt']/1000:
             days.append(days[-1] + 86400)
+            
+        days.append(days[-1] + 86400)
+        
+        timestamps = []
+        
+        timestamp = int(event['startAt']/1000)
+        while timestamp < days[-1]:
+            timestamps.append(timestamp)
+            timestamp += 3600
 
         indexes = [0] + [i for i, x in enumerate(timestamps) if x in days]
-
         view = OpenSlotsEmbed(indexes, timestamps, data, int(event['startAt']/1000))
 
         view.set_message(await ctx.edit(embed=view.generateEmbed(), view=view))
