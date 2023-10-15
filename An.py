@@ -326,6 +326,7 @@ if __name__ == "__main__":
     bot.load_extension('commands.Sheet')
     bot.load_extension('commands.Toyaify')
     bot.load_extension('commands.ViewCheckIn')
+    bot.load_extension('commands.Pings')
     bot.add_application_command(DCCommands)
     # remindPing.start()
     bot.run(token)
