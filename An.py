@@ -7,6 +7,7 @@ import asyncio
 from pytz import timezone
 from Config import Config
 from embeds.CheckInButtons import CheckInButtons
+from glob import glob
 
 import logging
 
@@ -93,8 +94,12 @@ class An(commands.Bot):
             if checkInMessage.ctx.id == message.id:
                 await checkInMessage.checkInReaction(user)
 
-    async def checkInServer(self, serverid):
+    async def checkInServer(self, serverid, manual=False):
         try:
+            
+            lastPing = self.config.getTime(serverid)
+            if lastPing + 2700 > time.time() and not manual:
+                return
 
             profile = self.getProfile(serverid)
             sheetId = self.config.getSheetId(serverid)
@@ -142,6 +147,8 @@ class An(commands.Bot):
                 # p.append(view.managerPing())
 
             await asyncio.gather(*p)
+            
+            self.config.setLastPing(serverid, int(time.time()))
         except Exception as e:
             print(e)
             print('Error in check in ping')
@@ -153,19 +160,22 @@ class An(commands.Bot):
             await channel.send('<@178294808429723648> fucked up something in the bot, manual ping this hour')
 
     @tasks.loop(hours=1)
-    async def checkIn(self):
+    async def checkIn(self, loops=10):
         tz = timezone('America/New_York')
-        print('Checking in at ' + str(datetime.now(tz)))
+        for i in range(loops):
+            print('Checking in at ' + str(datetime.now(tz)))
 
-        processes = []
+            processes = []
 
-        for serverid in self.config.getServers():
+            for serverid in self.config.getServers():
 
-            # Checks if the last update was more than 15 days ago
-            if self.config.getTime(serverid) + 86400 * 15 > time.time():
-                processes.append(self.checkInServer(serverid))
+                # Checks if the last update was more than 15 days ago
+                if self.config.getTime(serverid) + 86400 * 15 > time.time():
+                    processes.append(self.checkInServer(serverid))
 
-        asyncio.gather(*processes)
+            await asyncio.gather(*processes)
+            
+            await asyncio.sleep(60)
 
     @checkIn.before_loop
     async def waitUntilCheckIn(self):
@@ -173,6 +183,13 @@ class An(commands.Bot):
         await bot.wait_until_ready()
         now = datetime.now()
         future = datetime(now.year, now.month, now.day, now.hour, minute, 0, 0)
+        if now.hour == now.hour and now.minute >= 45 and now.minute <= 55:
+            await self.checkIn(55 - now.minute)
+            
+            ## reset date times since awaited
+            now = datetime.now()
+            future = datetime(now.year, now.month, now.day,
+                              now.hour, minute, 0, 0)
         if now.hour >= now.hour and now.minute > minute:
             future += timedelta(hours=1)
         print('Sleeping for ' + str((future-now).seconds/60) + ' minutes')
@@ -315,18 +332,11 @@ from commands.Sheet import Sheet
 
 if __name__ == "__main__":
     bot = An(command_prefix='/')
-    bot.load_extension('commands.Anify')
-    bot.load_extension('commands.ChangeCheckIn')
-    bot.load_extension('commands.CheckInPrompt')
-    bot.load_extension('commands.Hours')
-    bot.load_extension('commands.ManualCheckIn')
-    bot.load_extension('commands.OpenSlots')
-    bot.load_extension('commands.Order')
-    bot.load_extension('commands.RemoveCheckIn')
-    bot.load_extension('commands.Sheet')
-    bot.load_extension('commands.Toyaify')
-    bot.load_extension('commands.ViewCheckIn')
-    bot.load_extension('commands.Pings')
+    for fp in glob('commands/*.py'):
+        if fp.endswith('__init__.py'):
+            continue
+        print("Loading: ", fp.replace('/', '.')[:-3])
+        bot.load_extension(fp.replace('/', '.')[:-3])
     bot.add_application_command(DCCommands)
     # remindPing.start()
     bot.run(token)
