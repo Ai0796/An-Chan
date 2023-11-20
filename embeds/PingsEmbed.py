@@ -43,10 +43,14 @@ class PingsEmbed(discord.ui.View):
 
         if userSet:
             embed = discord.Embed(
-                title=f'Pings Day {self.day + 1}', description=returnStr, color=0x00ff00)
+                title=f'Pings Day {self.day + 1}', 
+                description=returnStr, 
+                color = 0x00BBDC)
         else:
             embed = discord.Embed(
-                title=f'Pings Day {self.day + 1}', description='No found Users for the day', color=0x00ff00)
+                title=f'Pings Day {self.day + 1}', 
+                description='No found Users for the day', 
+                color = 0x00BBDC)
 
         return embed
 

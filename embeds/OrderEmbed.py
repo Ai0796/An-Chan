@@ -137,7 +137,10 @@ class OrderEmbed(discord.ui.View):
         
         order += f'\rSwap <t:{timestamp}:R>'
         
-        return discord.Embed(title=f'Room Order {min(self.roomIndex, len(orders) - 1) + 1}', description=order, color=discord.Color.blurple())
+        return discord.Embed(
+            title=f'Room Order {min(self.roomIndex, len(orders) - 1) + 1}', 
+            description=order, 
+            color = 0x00BBDC)
 
     @discord.ui.button(label='Previous', style=discord.ButtonStyle.primary, emoji='⬅️')
     async def previous(self, button: discord.ui.Button, interaction: discord.Interaction):

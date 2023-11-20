@@ -10,7 +10,7 @@ class ManualCheckIn(commands.Cog):
 
     @commands.slash_command(name="manualcheckin", description="Manually runs check in, run this at :50")
     async def manualCheckIn(self, ctx):
-        await self.bot.checkInServer(ctx.guild.id)
+        await self.bot.checkInServer(ctx.guild.id, True)
         await ctx.respond("Manual Check In Sent")
 
 

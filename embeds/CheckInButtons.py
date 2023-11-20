@@ -80,7 +80,10 @@ class CheckInButtons(discord.ui.View):
     def generateEmbed(self):
         
         if len(self.users) == 0:
-            return discord.Embed(title=f'Coming Up (Room {self.room})', description=self.quote + self.message, color=discord.Color.blurple())
+            return discord.Embed(
+                title=f'Coming Up (Room {self.room})', 
+                description=self.quote + self.message, 
+                color = 0x00BBDC)
 
         embedStr = ''
 
@@ -96,11 +99,17 @@ class CheckInButtons(discord.ui.View):
             else:
                 embedStr += f'Not Checked In: <@{user}>\n'
 
-        return discord.Embed(title=f'Check In (Room {self.room})', description=embedStr, color=discord.Color.blurple())
+        return discord.Embed(
+            title=f'Check In (Room {self.room})', 
+            description=embedStr, 
+            color = 0x00BBDC)
 
     def comingUp(self):
         if len(self.users) == 0:
-            return discord.Embed(title=f'Coming Up (Room {self.room})', description=self.quote + self.message, color=discord.Color.blurple())
+            return discord.Embed(
+                title=f'Coming Up (Room {self.room})', 
+                description=self.quote + self.message, 
+                color = 0x00BBDC)
 
         embedStr = ''
 
@@ -112,7 +121,10 @@ class CheckInButtons(discord.ui.View):
         for user in self.users:
             embedStr += f'<@{user}>\n'
 
-        return discord.Embed(title=f'Check In (Room {self.room})', description=embedStr, color=discord.Color.blurple())
+        return discord.Embed(
+            title=f'Check In (Room {self.room})', 
+            description=embedStr, 
+            color = 0x00BBDC)
 
     @discord.ui.button(label=f'Check In', style=discord.ButtonStyle.primary, emoji='🌸')
     async def checkIn(self, button: discord.ui.Button, interaction: discord.Interaction):

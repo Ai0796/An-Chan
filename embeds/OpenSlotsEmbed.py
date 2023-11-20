@@ -37,9 +37,15 @@ class OpenSlotsEmbed(discord.ui.View):
                 returnStr += f'H{hourIndex + 1}: {startTimestamp} to {endTimestamp} `+{slots}`\r'
             
         if returnStr != '':
-            embed = discord.Embed(title=f'Open Slots Day {self.day + 1}', description=returnStr, color=0x00ff00)
+            embed = discord.Embed(
+                title=f'Open Slots Day {self.day + 1}', 
+                description=returnStr, 
+                color = 0x00BBDC)
         else:
-            embed = discord.Embed(title=f'Open Slots Day {self.day + 1}', description='No open slots on this day', color=0x00ff00)
+            embed = discord.Embed(
+                title=f'Open Slots Day {self.day + 1}', 
+                description='No open slots on this day', 
+                color = 0x00BBDC)
             
         return embed
     
