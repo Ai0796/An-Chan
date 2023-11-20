@@ -77,3 +77,11 @@ class Config():
     
     def getServers(self):
         return list(self.data.keys())
+    
+    def getLastPing(self, serverid):
+        if 'lastPing' not in self.get(serverid):
+            return 0
+        return self.get(serverid)['lastPing']
+    
+    def setLastPing(self, serverid, pingTime):
+        self.set(serverid, 'lastPing', pingTime)
