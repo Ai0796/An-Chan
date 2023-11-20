@@ -106,7 +106,7 @@ class ai0(BaseRequest):
 
         for table, timestampIndex, playerIndexes in zip(values, timestampIndexes, playerIndexesList):
             for row in table:
-                values = [x for i, x in enumerate(row) if x != '' and i + minVal in playerIndexes]
+                values = [x for i, x in enumerate(row) if len(x) > 0 and i + minVal in playerIndexes]
                 if len(values) == 0 or (timestampIndex >= len(row)):
                     continue
                 hours.append([int(row[timestampIndex]), 5 - len(values)])
