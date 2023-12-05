@@ -50,6 +50,8 @@ class ai0(BaseRequest):
                 timestamp: 0 for timestamp in np.arange(int(event['startAt']/1000), int(event['rankingAnnounceAt']/1000), 3600)}
             
             for hour in hours:
+                if len(hour) < 2:
+                    continue
                 hourDic[hour[0]] += hour[1]
 
             return list(hourDic.values()), event
