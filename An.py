@@ -22,13 +22,8 @@ with open('config/config.json', 'r', encoding='utf8') as f:
 
 token = configData['token']
 
-CHANNEL_ID = '1039473652640514049'
-EMERGENCY_CHANNEL_ID = '422851664781770753'
-SHEETIDPATH = 'config/sheetId.txt'
-CHECKINPATH = 'config/checkIn.txt'
 EVENTPATH = '../RoboNene/sekai_master/events.json'
 DCSPATH = 'config/dcs.json'
-PROFILEPATH = 'config/profile.txt'
 
 # checkInMessages = []
 # checkInPrompts = {}
