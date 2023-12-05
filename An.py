@@ -157,7 +157,11 @@ class An(commands.Bot):
 
             if channelID == None:
                 return
-            await channel.send('<@178294808429723648> fucked up something in the bot, manual ping this hour')
+            print(serverid)
+            try:
+                await channel.send('Something went wrong with the check in ping')
+            except Exception as e:
+                print(e)
 
     @tasks.loop(hours=1)
     async def checkIn(self, loops=10):
