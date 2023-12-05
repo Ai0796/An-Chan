@@ -2,6 +2,7 @@ config*
 credentials.json
 token.json
 tokenCalendar.json
+tokenCalender.json
 Kohane.py
 __pycache__
 node_modules
