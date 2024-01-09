@@ -49,6 +49,8 @@ class ViewCheckIn(commands.Cog):
             
         if channelID == None:
             await ctx.followup.send('**ALERT** No check-in channel set for the server', ephemeral=True)
+        else:
+            await ctx.followup.send(f'Check In Channel: <#{channelID}>', ephemeral=True)
 
 
 def setup(bot):
