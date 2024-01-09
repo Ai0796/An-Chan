@@ -337,5 +337,6 @@ if __name__ == "__main__":
         print("Loading: ", fp.replace('/', '.')[:-3])
         bot.load_extension(fp.replace('/', '.')[:-3])
     bot.add_application_command(DCCommands)
+    bot.activity = discord.Activity(name='with こはね', type=discord.ActivityType.playing)
     # remindPing.start()
     bot.run(token)
