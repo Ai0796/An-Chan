@@ -16,7 +16,6 @@ class Sheet(commands.Cog):
         description="The sheet URL or sheet ID"
     )):
         """Changes the sheet the bot uses"""
-        await ctx.respond("Test", ephemeral=True)
         if '/' in url:
             url = url.split('/')
             index = url.index('d')
