@@ -45,7 +45,9 @@ class ai0(BaseRequest):
             hours = await self.getOpenSlots(spreadsheet, days, sheetId)
             
             event = self.getCurrentEvent(hours[0][0])
-            
+            if event is None:
+                return 
+                       
             hourDic = {
                 timestamp: 0 for timestamp in np.arange(int(event['startAt']/1000), int(event['rankingAnnounceAt']/1000), 3600)}
             
