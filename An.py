@@ -35,6 +35,7 @@ DCCommands = discord.SlashCommandGroup('dc', 'Commands related to DCing')
     
 from requestsTypes.ai0 import ai0
 import requestsTypes.haikurequest as haikurequest
+from requestsTypes.ai2 import ai2
     
 class An(commands.Bot):
     
@@ -53,7 +54,8 @@ class An(commands.Bot):
         
         self.profiles = {
             "An": ai0('token.json'),
-            "Toya": haikurequest
+            "Toya": haikurequest,
+            "Ai2": ai2('token.json')
         }
         
         with open(EVENTPATH, 'r', encoding='utf8') as f:
@@ -95,6 +97,8 @@ class An(commands.Bot):
             lastPing = self.config.getTime(serverid)
             if lastPing + 2700 > time.time() and not manual:
                 return
+            
+            print('Checking in server ' + str(serverid))
 
             profile = self.getProfile(serverid)
             sheetId = self.config.getSheetId(serverid)
