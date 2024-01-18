@@ -9,6 +9,9 @@ class ChangeCheckIn(commands.Cog):
     @default_permissions(manage_messages=True)
     async def changecheckin(self, ctx):
         """Changes the check in channel"""
+        if not ctx.channel.permissions_for(ctx.guild.me).send_messages:
+            await ctx.respond("An cannot message in this channel, please change permissions or use a different channel", ephemeral=True)
+            return
         channel = str(ctx.channel.id)
         
         self.bot.config.setCheckInChannel(ctx.guild.id, channel)
