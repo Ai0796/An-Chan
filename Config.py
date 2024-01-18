@@ -2,6 +2,15 @@ import time
 import rapidjson
 import os
 
+DEFAULT_CONFIG = {
+    'checkIn': None,
+    'requestType': 'An',
+    'sheetId': None,
+    'managerCheckIn': None,
+    'managerPing': None,
+    'lastUpdate': int(time.time())
+}
+
 class Config():
     def __init__(self, path = 'config/serverconfig.json'):
         self.data = {}
@@ -44,14 +53,13 @@ class Config():
         serverid = str(serverid)
         
         if serverid in self.data.keys():
-            return
+            for key in DEFAULT_CONFIG.keys():
+                if key not in self.data[serverid]:
+                    self.data[serverid][key] = DEFAULT_CONFIG[key]
         
-        self.data[serverid] = {
-            'checkIn': None,
-            'requestType': 'An',
-            'sheetId': None,
-            'lastUpdate': int(time.time())
-        }
+        else:
+            self.data[serverid] = DEFAULT_CONFIG
+
         self.save()
 
     def getCheckInChannel(self, serverid):
@@ -59,6 +67,18 @@ class Config():
 
     def setCheckInChannel(self, serverid, channelid):
         self.set(serverid, 'checkIn', channelid)
+        
+    def setManagerCheckInChannel(self, serverid, channelid):
+        self.set(serverid, 'managerCheckIn', channelid)
+        
+    def getManagerCheckInChannel(self, serverid):
+        return self.get(serverid)['managerCheckIn']
+    
+    def setManagerPing(self, serverid, roleID):
+        self.set(serverid, 'managerPing', roleID)
+        
+    def getManagerPing(self, serverid):
+        return self.get(serverid)['managerPing']
 
     def getRequestType(self, serverid):
         return self.get(serverid)['requestType']
