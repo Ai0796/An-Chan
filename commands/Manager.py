@@ -2,16 +2,16 @@ from discord.ext import commands
 from discord import default_permissions, Option, SlashCommandOptionType
 import discord
 
-class ManagerPing(commands.Cog):
+class Manager(commands.Cog):
     
     def __init__(self, bot):
         self.bot = bot
         
-    managerPing = discord.SlashCommandGroup('managerping', 
+    manager = discord.SlashCommandGroup('manager', 
                                       'Commands related to the manager ping',
                                       checks=[commands.has_permissions(manage_messages=True)])
 
-    @managerPing.command(name='channel', description='Changes the manager ping channel')
+    @manager.command(name='channel', description='Changes the manager channel')
     @default_permissions(manage_messages=True)
     async def changeManagerChannel(self, ctx):
         """Changes the manager in channel"""
@@ -30,7 +30,7 @@ class ManagerPing(commands.Cog):
         if isinstance(error, commands.MissingPermissions):
             await ctx.respond("You don't have permission to do that", ephemeral=True)
             
-    @managerPing.command(name='role', description='Changes the manager ping role')
+    @manager.command(name='role', description='Changes the manager role')
     @default_permissions(manage_messages=True)
     async def changeManagerRole(self, ctx, role: Option(
         SlashCommandOptionType.role,
@@ -45,4 +45,4 @@ class ManagerPing(commands.Cog):
 
 
 def setup(bot):
-    bot.add_cog(ManagerPing(bot))
+    bot.add_cog(Manager(bot))

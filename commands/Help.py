@@ -54,8 +54,8 @@ class Help(commands.Cog):
             "- `/hours` - Shows the hours signed up for a given user\n" +
             "- `/pings` - Gets all signed up users for a given day\n" +
             "- `/checkinprompt add` - Adds a prompt for the next check in message that will be sent\n" +
-            "- `/managerping channel` - Changes the channel the manager ping is sent in, the ping is sent 10 minutes after check in if there are missing users\n" +
-            "- `/managerping role` - Changes the role that is pinged in the manager ping\n"
+            "- `/manager channel` - Changes the channel the manager ping is sent in, the ping is sent 10 minutes after check in if there are missing users\n" +
+            "- `/manager role` - Changes the role that is pinged in the manager ping\n"
         )
 
         await ctx.respond(embed=embed)
