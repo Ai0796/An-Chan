@@ -111,7 +111,8 @@ class An(commands.Bot):
             if channelID == None:
                 return
 
-            channel = commands.Bot.get_channel(bot, int(channelID))
+            channel = commands.Bot.get_channel(self, int(channelID))
+            managerChannel, managerPing = self.config.getManagerCheckInChannel(serverid), self.config.getManagerPing(serverid)
 
             creds = profile.refreshCreds()
             data = await profile.main(creds, sheetId=sheetId)
@@ -132,7 +133,9 @@ class An(commands.Bot):
                 return
             for i, roomData in enumerate(data[timestamps[index]].checkIns):
                 view = CheckInButtons()
-                await view.asyncinit(roomData, timestamps[index], i + 1, self.checkInPrompts[int(serverid)])
+                await view.asyncinit(self, roomData, timestamps[index], i + 1, 
+                                     self.checkInPrompts[int(serverid)], 
+                                     managerChannel, managerPing)
                 if timestamp + 2700 < timestamps[index]:
                     await channel.send(f'Next scheduled hour in Room {i + 1} <t:{timestamps[index]}:R>')
                     await channel.send(embed=view.comingUp())
@@ -145,9 +148,10 @@ class An(commands.Bot):
                 self.checkInMessages.append(view)
                 # p.append(view.managerPing())
 
+            self.config.setLastPing(serverid, int(time.time()))
             await asyncio.gather(*p)
             
-            self.config.setLastPing(serverid, int(time.time()))
+            
         except Exception as e:
             print(e)
             print('Error in check in ping')
@@ -163,7 +167,7 @@ class An(commands.Bot):
                 print(e)
 
     @tasks.loop(hours=1)
-    async def checkIn(self, loops=10):
+    async def checkIn(self, loops=5):
         tz = timezone('America/New_York')
         for i in range(loops):
             print('Checking in at ' + str(datetime.now(tz)))

@@ -23,16 +23,19 @@ class CheckInButtons(discord.ui.View):
 
     def __init__(self):
         
-        super().__init__(timeout=900)
+        super().__init__(timeout=600)
         
-    async def asyncinit(self, checkInMessage, timestamp, room, prompts, test=False):
+    async def asyncinit(self, bot, checkInMessage, timestamps, room, prompts, managerChannel, managerPing, test=False):
+        self.bot = bot
         self.message = checkInMessage
-        self.timestamp = timestamp
+        self.timestamp = timestamps
         self.users = []
         self.checkedIn = set()
         self.room = room
         self.ctx = None
         self.count = 0
+        self.managerChannel = managerChannel
+        self.managerRole = managerPing
         
         if len(prompts) > 0:
             if test:
@@ -54,17 +57,17 @@ class CheckInButtons(discord.ui.View):
             return
         
         self.channel = re.findall(r'<#[0-9]*>', self.message)[0]
-        
-    async def managerPing(self):
-        await asyncio.sleep(600)
-        return
-        if len(self.checkedIn) < len(self.users):
-            channel = commands.Bot.get_channel(bot, int(EMERGENCY_CHANNEL_ID))
-            await channel.send(f'Room {self.room} has missing check ins')
 
     async def on_timeout(self):
         embed = self.generateEmbed()
         await self.message.edit(embed=embed, view=None)
+        
+        if self.managerRole is None or self.managerChannel is None or len(self.users) == 0:
+            return
+        
+        if len(self.checkedIn) < len(self.users):
+            channel = commands.Bot.get_channel(self.bot, int(self.managerChannel))
+            await channel.send(f'Room {self.room} has {len(self.users) - len(self.checkedIn)} missing check ins {self.managerRole}')
         
     def addCtx(self, ctx):
         self.ctx = ctx
