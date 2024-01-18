@@ -13,7 +13,7 @@ class ChangeCheckIn(commands.Cog):
         
         self.bot.config.setCheckInChannel(ctx.guild.id, channel)
 
-        await ctx.respond("Check In Channel changed to <#{channel}>", ephemeral=True)
+        await ctx.respond(f"Check In Channel changed to <#{channel}>", ephemeral=True)
         
     @changecheckin.error
     async def changecheckin_error(self, ctx, error):
