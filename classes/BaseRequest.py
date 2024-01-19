@@ -33,6 +33,7 @@ class BaseRequest():
     async def lookup(self, spreadsheet, query, sheetId):
         return spreadsheet.values().get(spreadsheetId=sheetId,
                                             range=query).execute()
+        
     async def lookupBatch(self, spreadsheet, queries, sheetId):
         return spreadsheet.values().batchGet(spreadsheetId=sheetId,
                                         ranges=queries).execute()
@@ -77,8 +78,6 @@ class BaseRequest():
                 
         creds = Credentials.from_authorized_user_file('token.json', self.SCOPES)
                 
-        print('returning creds')
-                
         return creds
 
 
@@ -104,7 +103,6 @@ class BaseRequest():
         Returns:
         String
         """
-        timestampDict = {}
 
         try:
             service = build('sheets', 'v4', credentials=creds)
@@ -116,27 +114,18 @@ class BaseRequest():
             
             # Q4:Q27
             # P4:P27
-            titles = None
-            for sheet in sheets:
-                if sheet['properties']['title'] == 'id':
-                    titles = sheet['properties']['title']
-                    break
-                
-            if titles == None:
+            if 'id' not in [sheet['properties']['title'] for sheet in sheets]:
                 return None
             
-            result = await self.lookup(spreadsheet, 'id!A1:A1', sheetId)
+            result = await self.lookup(spreadsheet, 'id!A1', sheetId)
             myKeys = result.get('values', [])
+            if not myKeys:
+                return None
+            
             return myKeys[0][0]
         
         except HttpError as err:
             print(err)
-        scheduleSheets = []
-        for sheet in sheets:
-            if sheet['properties']['title'].lower().strip().startswith('day'):
-                scheduleSheets.append(sheet['properties']['title'])
-                
-        return scheduleSheets
 
     async def getAllOpenSlots(self, creds, sheetId, eventData):
         """
