@@ -147,7 +147,6 @@ class An(commands.Bot):
                 ctx = await channel.send(view.pings(), embed=view.generateEmbed(), view=view)
                 view.addCtx(ctx)
                 self.checkInMessages.append(view)
-                # p.append(view.managerPing())
 
             self.config.setLastPing(serverid, int(time.time()))
             await asyncio.gather(*p)
@@ -156,12 +155,13 @@ class An(commands.Bot):
         except Exception as e:
             print(e)
             print('Error in check in ping')
+            print(serverid)
 
             channelID = self.config.getCheckInChannel(serverid)
 
             if channelID == None:
                 return
-            print(serverid)
+
             try:
                 await channel.send('Something went wrong with the check in ping')
             except Exception as e:
@@ -171,14 +171,15 @@ class An(commands.Bot):
     async def checkIn(self, loops=5):
         tz = timezone('America/New_York')
         for i in range(loops):
-            print('Checking in at ' + str(datetime.now(tz)))
+            print(f'{i}: Checking in at {str(datetime.now(tz))}')
 
             processes = []
+            timestamp = time.time()
 
             for serverid in self.config.getServers():
 
                 # Checks if the last update was more than 15 days ago
-                if self.config.getTime(serverid) + 86400 * 15 > time.time():
+                if self.config.getTime(serverid) + 86400 * 15 > timestamp:
                     processes.append(self.checkInServer(serverid))
 
             await asyncio.gather(*processes)
