@@ -97,8 +97,6 @@ class An(commands.Bot):
             lastPing = self.config.getTime(serverid)
             if lastPing + 2700 > time.time() and not manual:
                 return
-            
-            print('Checking in server ' + str(serverid))
 
             profile = self.getProfile(serverid)
             sheetId = self.config.getSheetId(serverid)
@@ -131,6 +129,9 @@ class An(commands.Bot):
             if len(timestamps) == 0 or timestamp > timestamps[-1]:
                 print('No Check Ins Found')
                 return
+            
+            print('Checking in server ' + str(serverid))
+            
             for i, roomData in enumerate(data[timestamps[index]].checkIns):
                 view = CheckInButtons()
                 await view.asyncinit(self, roomData, timestamps[index], i + 1, 
