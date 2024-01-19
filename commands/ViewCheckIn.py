@@ -35,7 +35,7 @@ class ViewCheckIn(commands.Cog):
             return
         for i, roomData in enumerate(data[timestamps[index]].checkIns):
             view = CheckInButtons()
-            await view.asyncinit(roomData, timestamps[index], i + 1, self.bot.checkInPrompts[ctx.guild.id], True)
+            await view.asyncinit(self.bot, roomData, timestamps[index], i + 1, self.bot.checkInPrompts[ctx.guild.id], None, None, True)
             if timestamp + 2700 < timestamps[index]:
                 await ctx.followup.send(f'Next scheduled hour in Room {i + 1} <t:{timestamps[index]}:R>',
                                         embed=view.comingUp(),
