@@ -48,12 +48,12 @@ class ai2(BaseRequest):
                 return 
                        
             hourDic = {
-                timestamp: 0 for timestamp in np.arange(int(event['startAt']/1000), int(event['rankingAnnounceAt']/1000), 3600)}
+                timestamp: -1 for timestamp in np.arange(int(event['startAt']/1000), int(event['rankingAnnounceAt']/1000), 3600)}
             
             for hour in hours:
                 if len(hour) < 2:
                     continue
-                hourDic[hour[0]] += hour[1]
+                hourDic[hour[0]] = max(0, hourDic[hour[0]]) + hour[1]
 
             return list(hourDic.values()), event
 
@@ -286,14 +286,8 @@ class ai2(BaseRequest):
             sheet_metadata = spreadsheet.get(spreadsheetId=sheetId).execute()
             sheets = sheet_metadata.get('sheets', '')
 
-            teams = None
-            days = []
-            for sheet in sheets:
-                if sheet['properties']['title'].lower().strip() == 'teams':
-                    teams = sheet['properties']['title']
-
-                if sheet['properties']['title'].lower().strip().startswith('day'):
-                    days.append(sheet['properties']['title'])
+            teams = self.getTeamSheet(sheets)
+            days = self.getScheduleSheets(sheets)
 
             nameDic = await self.getNameDic(spreadsheet, teams, sheetId)
 

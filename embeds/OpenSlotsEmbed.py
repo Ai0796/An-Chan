@@ -26,15 +26,18 @@ class OpenSlotsEmbed(discord.ui.View):
         returnStr = ''
         
         for slots, timestamp in zip(data, timestamps):
-            if slots > 0:
+            if slots != -1:
                 startUnixTime = int(timestamp)
                 endUnixTime = int(startUnixTime + HOUR)
                 startTimestamp = f'<t:{startUnixTime}:D> <t:{startUnixTime}:t>'
                 endTimestamp = f'<t:{endUnixTime}:t>'
                 
                 hourIndex = round((startUnixTime - self.start) / HOUR)
-        
-                returnStr += f'H{hourIndex + 1}: {startTimestamp} to {endTimestamp} `+{slots}`\r'
+                
+                if slots == 0:
+                    returnStr += f'`H{hourIndex + 1}`: {startTimestamp} to {endTimestamp} `STANDBY`\r'
+                else:
+                    returnStr += f'`H{hourIndex + 1}`: {startTimestamp} to {endTimestamp} `+{slots}`\r'
             
         if returnStr != '':
             embed = discord.Embed(
