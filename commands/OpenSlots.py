@@ -1,14 +1,18 @@
 from discord.ext import commands
 from scripts.getCurrentEvent import getCurrentEvent
 from embeds.OpenSlotsEmbed import OpenSlotsEmbed
+from discord import Option, SlashCommandOptionType
 
 class OpenSlots(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
             
     @commands.slash_command(name="openslots", description="Gets the number of open slots for the current event")
-    async def openSlots(self, ctx):
-
+    async def openSlots(self, ctx, standby: Option(
+            SlashCommandOptionType.boolean,
+            description="show standby hours",
+            default=False)
+    ):
         await ctx.defer()
 
         profile = self.bot.getProfile(ctx.guild.id)
@@ -40,7 +44,7 @@ class OpenSlots(commands.Cog):
             timestamp += 3600
 
         indexes = [0] + [i for i, x in enumerate(timestamps) if x in days]
-        view = OpenSlotsEmbed(indexes, timestamps, data, int(event['startAt']/1000))
+        view = OpenSlotsEmbed(indexes, timestamps, data, int(event['startAt']/1000), standby)
 
         view.set_message(await ctx.edit(embed=view.generateEmbed(), view=view))
 

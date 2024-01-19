@@ -4,12 +4,13 @@ import time
 
 class OpenSlotsEmbed(discord.ui.View):
     
-    def __init__(self, dayindexes, timestamps, slots, start):
+    def __init__(self, dayindexes, timestamps, slots, start, standby):
         super().__init__(timeout=30)
         self.dayindexes = dayindexes
         self.timestamps = timestamps
         self.slots = slots
         self.start = start
+        self.standby = standby
         self.day = min(bisect_left(self.dayindexes, bisect_left(self.timestamps, time.time())), len(self.dayindexes) - 2)
         self.message = None
         
@@ -35,7 +36,8 @@ class OpenSlotsEmbed(discord.ui.View):
                 hourIndex = round((startUnixTime - self.start) / HOUR)
                 
                 if slots == 0:
-                    returnStr += f'`H{hourIndex + 1}`: {startTimestamp} to {endTimestamp} `STANDBY`\r'
+                    if self.standby:
+                        returnStr += f'`H{hourIndex + 1}`: {startTimestamp} to {endTimestamp} `STANDBY`\r'
                 else:
                     returnStr += f'`H{hourIndex + 1}`: {startTimestamp} to {endTimestamp} `+{slots}`\r'
             
