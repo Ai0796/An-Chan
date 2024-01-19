@@ -72,6 +72,10 @@ class An(commands.Bot):
 
         print('Starting bot...')
         
+    async def on_guild_join(self, guild):
+        self.config.createServer(guild.id)
+        self.checkInPrompts[guild.id] = []
+        
     def getProfile(self, serverid):
         return self.profiles[self.config.getRequestType(serverid)]
     
