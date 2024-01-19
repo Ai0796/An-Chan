@@ -14,7 +14,7 @@ import rapidjson
 class BaseRequest():
     
     SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
-    EVENTPATH = 'config/events.json'
+    EVENTPATH = '../RoboNene/sekai_master/events.json'
     
     def __init__(self, token):
         self.token = token
@@ -35,7 +35,7 @@ class BaseRequest():
                                             range=query).execute()
     async def lookupBatch(self, spreadsheet, queries, sheetId):
         return spreadsheet.values().batchGet(spreadsheetId=sheetId,
-                                        ranges=queries).execute()    
+                                        ranges=queries).execute()
         
     def getTeamSheet(self, sheets):
         return None
@@ -96,6 +96,47 @@ class BaseRequest():
                 return event
 
         return None
+    
+    async def getID(self, creds, sheetId):
+        """
+        Gets the ID of the sheet (if exists)
+        
+        Returns:
+        String
+        """
+        timestampDict = {}
+
+        try:
+            service = build('sheets', 'v4', credentials=creds)
+
+            # Call the Sheets API
+            spreadsheet = service.spreadsheets()
+            sheet_metadata = spreadsheet.get(spreadsheetId=sheetId).execute()
+            sheets = sheet_metadata.get('sheets', '')
+            
+            # Q4:Q27
+            # P4:P27
+            titles = None
+            for sheet in sheets:
+                if sheet['properties']['title'] == 'id':
+                    titles = sheet['properties']['title']
+                    break
+                
+            if titles == None:
+                return None
+            
+            result = await self.lookup(spreadsheet, 'id!A1:A1', sheetId)
+            myKeys = result.get('values', [])
+            return myKeys[0][0]
+        
+        except HttpError as err:
+            print(err)
+        scheduleSheets = []
+        for sheet in sheets:
+            if sheet['properties']['title'].lower().strip().startswith('day'):
+                scheduleSheets.append(sheet['properties']['title'])
+                
+        return scheduleSheets
 
     async def getAllOpenSlots(self, creds, sheetId, eventData):
         """
@@ -107,67 +148,67 @@ class BaseRequest():
 
         return None
         
-async def getOpenSlots(self, spreadsheet, titles, sheetId):
-    """
-    Gets open slots for a specific page in the spreadsheet
+    async def getOpenSlots(self, spreadsheet, titles, sheetId):
+        """
+        Gets open slots for a specific page in the spreadsheet
 
-    Args:
-        spreadsheet (_type_): _description_
-        titles (_type_): _description_
-        sheetId (_type_): _description_
-    """
-    return None
+        Args:
+            spreadsheet (_type_): _description_
+            titles (_type_): _description_
+            sheetId (_type_): _description_
+        """
+        return None
 
-async def getNames(self, spreadsheet, title, sheetId, userid):
+    async def getNames(self, spreadsheet, title, sheetId, userid):
 
-    """
-    Gets all names from the "teams" page of a spreadsheet
-    """
-    return None
+        """
+        Gets all names from the "teams" page of a spreadsheet
+        """
+        return None
 
-async def getUsers(self, spreadsheet, titles, sheetId, names):
-    """
-    Gets all users from the schedule that matches the given list of names
+    async def getUsers(self, spreadsheet, titles, sheetId, names):
+        """
+        Gets all users from the schedule that matches the given list of names
 
-    Args:
-        spreadsheet (_type_): _description_
-        titles (_type_): _description_
-        sheetId (_type_): _description_
-        names (_type_): _description_
-    """
-    return None
+        Args:
+            spreadsheet (_type_): _description_
+            titles (_type_): _description_
+            sheetId (_type_): _description_
+            names (_type_): _description_
+        """
+        return None
 
-async def getUserVals(self, creds, sheetId, userid, eventData):
-    """
-    Gets all placements of a specific user from all pages of a spreadsheet
-    
-    Returns:
-    List [index]
-    """
-    
-    return None
+    async def getUserVals(self, creds, sheetId, userid, eventData):
+        """
+        Gets all placements of a specific user from all pages of a spreadsheet
+        
+        Returns:
+        List [index]
+        """
+        
+        return None
 
-async def getLookups(self, spreadsheet, titles, sheetId) -> list:
-    """Gets required lookups for checkin and order lookups
+    async def getLookups(self, spreadsheet, titles, sheetId) -> list:
+        """Gets required lookups for checkin and order lookups
 
-    Args:
-        spreadsheet (_type_): _description_
-        titles (_type_): _description_
-        sheetId (_type_): _description_
+        Args:
+            spreadsheet (_type_): _description_
+            titles (_type_): _description_
+            sheetId (_type_): _description_
 
-    Returns:
-        list: _description_
-    """
+        Returns:
+            list: _description_
+        """
 
-async def getVals(self, spreadsheet, combinedLookup, colIndexes, sheetId) -> dict:
-    """
-    Gets all order and check in values for all given lookups
-    """
+    async def getVals(self, spreadsheet, combinedLookup, colIndexes, sheetId) -> dict:
+        """
+        Gets all order and check in values for all given lookups
+        """
 
-async def main(self, creds, sheetId) -> dict:
-    """
-    Gets all orders and check ins for all users
-    
-    Returns:
-    Dict {timestamp: {orders: [], checkIns: []}}
-    """
+    async def main(self, creds, sheetId) -> dict:
+        """
+        Gets all orders and check ins for all users
+        
+        Returns:
+        Dict {timestamp: {orders: [], checkIns: []}}
+        """
