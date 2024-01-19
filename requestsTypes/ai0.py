@@ -289,14 +289,8 @@ class ai0(BaseRequest):
             sheet_metadata = spreadsheet.get(spreadsheetId=sheetId).execute()
             sheets = sheet_metadata.get('sheets', '')
 
-            teams = None
-            days = []
-            for sheet in sheets:
-                if sheet['properties']['title'].lower().strip() == 'teams':
-                    teams = sheet['properties']['title']
-
-                if sheet['properties']['title'].lower().strip().startswith('day'):
-                    days.append(sheet['properties']['title'])
+            teams = self.getTeamSheet(sheets)
+            days = self.getScheduleSheets(sheets)
 
             nameDic = await self.getNameDic(spreadsheet, teams, sheetId)
 
@@ -337,17 +331,9 @@ class ai0(BaseRequest):
             sheet_metadata = spreadsheet.get(spreadsheetId=sheetId).execute()
             sheets = sheet_metadata.get('sheets', '')
 
-            teams = None
-            days = []
-            for sheet in sheets:
-                if sheet['properties']['title'].lower().strip() == 'teams':
-                    teams = sheet['properties']['title']
-
-                if sheet['properties']['title'].lower().strip().startswith('day'):
-                    days.append(sheet['properties']['title'])
-
-            queue = []
-
+            teams = self.getTeamSheet(sheets)
+            days = self.getScheduleSheets(sheets)
+            
             names = await self.getNames(spreadsheet, teams, sheetId, userid)
             
             if len(names) < 1:
@@ -486,12 +472,7 @@ class ai0(BaseRequest):
             
             # Q4:Q27
             # P4:P27
-            titles = []
-            for sheet in sheets:
-                if 'day' in sheet['properties']['title'].lower().strip():
-                    titles.append(sheet['properties']['title'])
-                    
-            queue = []
+            titles = self.getScheduleSheets(sheets)
             
             lookups, colIndexes = await self.getLookups(spreadsheet, titles, sheetId)
             timestampDict = await self.getOrderVals(spreadsheet, lookups, colIndexes, sheetId)
