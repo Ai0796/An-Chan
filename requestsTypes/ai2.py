@@ -19,8 +19,10 @@ class ai2(BaseRequest):
     def getScheduleSheets(self, sheets):
         scheduleSheets = []
         for sheet in sheets:
-            if sheet['properties']['title'].lower().strip() == 'schedule':
-                return [sheet['properties']['title']]
+            if sheet['properties']['title'].lower().strip().startswith('schedule'):
+                scheduleSheets.append(sheet['properties']['title'])
+            
+        return scheduleSheets
 
     async def getAllOpenSlots(self, creds, sheetId, eventData):
         """
