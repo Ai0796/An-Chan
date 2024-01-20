@@ -8,8 +8,6 @@ class Anify(commands.Cog):
 
     @commands.slash_command(name="anify", description="Turns the bot into An")
     async def anify(self, ctx):
-        with open('profiles/An.png', 'rb') as f:
-            pfp = f.read()
         guild = ctx.guild
 
         self.bot.config.setRequestType(guild.id, 'An')
