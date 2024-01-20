@@ -8,6 +8,7 @@ from pytz import timezone
 from Config import Config
 from embeds.CheckInButtons import CheckInButtons
 from glob import glob
+import traceback
 
 import logging
 
@@ -156,8 +157,8 @@ class An(commands.Bot):
             await asyncio.gather(*p)
             
             
-        except Exception as e:
-            print(e)
+        except Exception:
+            print(traceback.format_exc())
             print('Error in check in ping')
             print(serverid)
 
