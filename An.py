@@ -137,9 +137,19 @@ class An(commands.Bot):
             
             print('Checking in server ' + str(serverid))
             
-            for i, roomData in enumerate(data[timestamps[index]].checkIns):
+            roomData = data[timestamps[index]]
+            checkIns = roomData.getCheckIns()
+            managers = roomData.getManagers()
+            
+            for i in range(len(checkIns)):
+                checkIn = checkIns[i]
+                manager = managers[i]
+                if manager:
+                    id = await profile.getDiscordID(creds, sheetId, manager)
+                    if id != None:
+                        managerPing = f'<@{id}>'
                 view = CheckInButtons()
-                await view.asyncinit(self, roomData, timestamps[index], i + 1, 
+                await view.asyncinit(self, checkIn, timestamps[index], i + 1, 
                                      self.checkInPrompts[int(serverid)], 
                                      managerChannel, managerPing)
                 if timestamp + 2700 < timestamps[index]:
@@ -155,7 +165,6 @@ class An(commands.Bot):
 
             self.config.setLastPing(serverid, int(time.time()))
             await asyncio.gather(*p)
-            
             
         except Exception:
             print(traceback.format_exc())
