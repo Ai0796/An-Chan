@@ -176,6 +176,16 @@ class BaseRequest():
         """
         
         return None
+    
+    async def getDiscordID(self, creds, sheetId, username):
+        """
+        Gets the discord ID of a user from the "teams" page of a spreadsheet
+        
+        Returns:
+        String
+        """
+        
+        return None
 
     async def getLookups(self, spreadsheet, titles, sheetId) -> list:
         """Gets required lookups for checkin and order lookups

@@ -273,7 +273,7 @@ class ai2(BaseRequest):
         for i in range(0, len(values), 2):
             if 'values' in values[i] and 'values' in values[i + 1]:
                 for players, timestamp in zip(values[i]['values'], values[i + 1]['values']):
-                    if len(players) <= 0:
+                    if len(players) <= 0 or len(timestamp) <= 0:
                         continue
                     pings.append([int(timestamp[-1]), [nameDic[x] for x in players if x in nameDic]])
 
@@ -309,6 +309,31 @@ class ai2(BaseRequest):
             hourDic = {k: v for k, v in sorted(
                 hourDic.items(), key=lambda item: item[0])}
             return hourDic
+
+        except HttpError as err:
+            print(err)
+            
+    async def getDiscordID(self, creds, sheetId, username):
+        try:
+            service = build('sheets', 'v4', credentials=creds)
+
+            # Call the Sheets API
+            spreadsheet = service.spreadsheets()
+            sheet_metadata = spreadsheet.get(spreadsheetId=sheetId).execute()
+            sheets = sheet_metadata.get('sheets', '')
+
+            teams = self.getTeamSheet(sheets)
+            days = self.getScheduleSheets(sheets)
+
+            nameDic = await self.getNameDic(spreadsheet, teams, sheetId)
+
+            if len(nameDic) < 1:
+                return []
+            
+            if username not in nameDic:
+                return None
+            
+            return nameDic[username]
 
         except HttpError as err:
             print(err)
@@ -368,6 +393,7 @@ class ai2(BaseRequest):
         timestampCols = []
         orderCols = []
         checkInCols = []
+        managerCols = []
 
         for title, values in zip(titles, valueRanges):
             values = values.get('values', [])[0]
@@ -379,9 +405,13 @@ class ai2(BaseRequest):
             timestampIndex = values.index('timestamp')
             orderIndex = values.index('order')
             checkInIndex = values.index('check in')
+            if 'manager' in values:
+                managerIndex = values.index('manager')
+            else:
+                managerIndex = checkInIndex
             
-            minColumn = min(timestampIndex, orderIndex, checkInIndex)
-            maxColumn = max(timestampIndex, orderIndex, checkInIndex)
+            minColumn = min(timestampIndex, orderIndex, checkInIndex, managerIndex)
+            maxColumn = max(timestampIndex, orderIndex, checkInIndex, managerIndex)
             
             combinedLookup += [
                 f'{title}!{self.excel_cols(minColumn + 1)}3:{self.excel_cols(maxColumn + 1)}300',
@@ -390,8 +420,12 @@ class ai2(BaseRequest):
             timestampCols.append(timestampIndex - minColumn)
             orderCols.append(orderIndex - minColumn)
             checkInCols.append(checkInIndex - minColumn)
-        
-        return combinedLookup, [timestampCols, orderCols, checkInCols]
+            if 'manager' in values:
+                managerCols.append(managerIndex - minColumn)
+            else:
+                managerCols.append(-1)
+                
+        return combinedLookup, [timestampCols, orderCols, checkInCols, managerCols]
 
     async def getOrderVals(self, spreadsheet, combinedLookup, colIndexes, sheetId) -> dict:
         timestampDict = {}
@@ -403,12 +437,14 @@ class ai2(BaseRequest):
         timestampCols = colIndexes[0]
         orderCols = colIndexes[1]
         checkInCols = colIndexes[2]
+        managerCols = colIndexes[3]
         
         timestamps = []
         orders = []
         checkIns = []
+        managers = []
         
-        for table, timestampCol, orderCol, checkInCol in zip(values, timestampCols, orderCols, checkInCols):
+        for table, timestampCol, orderCol, checkInCol, managerCol in zip(values, timestampCols, orderCols, checkInCols, managerCols):
             maxCol = max(timestampCol, orderCol, checkInCol)
             for row in table:
                 if len(row) <= maxCol:
@@ -416,11 +452,15 @@ class ai2(BaseRequest):
                 timestamps.append(row[timestampCol])
                 orders.append(row[orderCol])
                 checkIns.append(row[checkInCol])
+                if managerCol != -1:
+                    managers.append(row[managerCol])
+                else:
+                    managers.append(None)
 
-        values = zip(timestamps, orders, checkIns)
+        values = zip(timestamps, orders, checkIns, managers)
         pattern = re.compile('^P[0-9]:')
 
-        for timestamp, order, checkIn in values:
+        for timestamp, order, checkIn, manager in values:
 
             if (len(order) > 0 and order.startswith('New Room Order:')):
 
@@ -444,9 +484,10 @@ class ai2(BaseRequest):
                 if int(timestamp) in timestampDict:
                     timestampDict[int(timestamp)].addPlayer(players)
                     timestampDict[int(timestamp)].addCheckIn(checkIn)
+                    timestampDict[int(timestamp)].addManager(manager)
                 else:
                     timestampDict[int(timestamp)] = TimeData(
-                        int(timestamp), [players], [checkIn])
+                        int(timestamp), [players], [checkIn], [manager])
             else:
                 pass
 
