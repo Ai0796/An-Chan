@@ -23,7 +23,7 @@ class CheckInButtons(discord.ui.View):
 
     def __init__(self):
         
-        super().__init__(timeout=600)
+        super().__init__(timeout=300)
         
     async def asyncinit(self, bot, checkInMessage, timestamps, room, prompts, managerChannel, managerPing, test=False):
         self.bot = bot
