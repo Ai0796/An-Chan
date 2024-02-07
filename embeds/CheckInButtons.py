@@ -20,6 +20,14 @@ class CheckInButtons(discord.ui.View):
         'Did you shower your leader yet?',
         'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
     ]
+    
+    proudQuotes = [
+        "Congrats on checking in everyone!",
+        "Did you remember to pray to Kohane?",
+        "Don't grief runner",
+        "Everyone check your leads",
+        "Have you considered just filling the next 72 hours?"
+    ]
 
     def __init__(self):
         
@@ -29,13 +37,15 @@ class CheckInButtons(discord.ui.View):
         self.bot = bot
         self.message = checkInMessage
         self.timestamp = timestamps
-        self.users = []
+        self.users = set()
         self.checkedIn = set()
         self.room = room
         self.ctx = None
         self.count = 0
         self.managerChannel = managerChannel
         self.managerRole = managerPing
+        
+        self.sentMessage = False
         
         if len(prompts) > 0:
             if test:
@@ -51,7 +61,7 @@ class CheckInButtons(discord.ui.View):
         result = re.findall(r'<@[0-9]*>', self.message)
 
         for user in result:
-            self.users.append(user[2:-1])
+            self.users.add(user[2:-1])
             
         if len(self.users) == 0:
             return
@@ -128,6 +138,17 @@ class CheckInButtons(discord.ui.View):
             title=f'Check In (Room {self.room})', 
             description=embedStr, 
             color = 0x00BBDC)
+        
+    async def sendRoomReminder(self):
+        if not self.sentMessage and len(self.checkedIn) == len(self.users):
+            try:
+                self.sentMessage = True
+                channelid = self.channel[2:-1]
+                channel = self.bot.get_channel(int(channelid))
+                quote = self.proudQuotes[random.randint(0, len(self.proudQuotes) - 1)]
+                await channel.send(f'{quote}\n\nEveryone has checked in, use /order to see room order')
+            except:
+                pass
 
     @discord.ui.button(label=f'Check In', style=discord.ButtonStyle.primary, emoji='🌸')
     async def checkIn(self, button: discord.ui.Button, interaction: discord.Interaction):
@@ -135,10 +156,16 @@ class CheckInButtons(discord.ui.View):
         if str(interaction.user.id) in self.users:
             self.count += 1
             self.checkedIn.add(str(interaction.user.id))
+            
+            await self.sendRoomReminder()
+            
         await interaction.response.edit_message(embed=self.generateEmbed(), view=self)
         
     async def checkInReaction(self, user):
         if str(user.id) in self.users:
             self.count += 1
             self.checkedIn.add(str(user.id))
+            
+            await self.sendRoomReminder()
+            
         await self.ctx.edit(embed=self.generateEmbed(), view=self)
