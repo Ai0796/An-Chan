@@ -78,8 +78,6 @@ class haiku(BaseRequest):
                 
         creds = Credentials.from_authorized_user_file('token.json', SCOPES)
                 
-        print('returning creds')
-                
         return creds
 
 
@@ -395,10 +393,7 @@ class haiku(BaseRequest):
             
             # Q4:Q27
             # P4:P27
-            titles = []
-            for sheet in sheets:
-                if 'scheduling' in sheet['properties']['title'].lower().strip():
-                    titles.append(sheet['properties']['title'])
+            titles = self.getScheduleSheets(sheets)
                     
             queue = []
             for title in titles:
