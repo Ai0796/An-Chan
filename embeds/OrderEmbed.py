@@ -71,11 +71,11 @@ class OrderEmbed(discord.ui.View):
         for i in range(len(players)):
             player = players[i]
 
-            if ('encore' in player.name.lower()):
+            if ('encore' in player.name.lower() or '(e)' in player.name.lower()):
                 encoreIndex = i
                 break
             
-            if player.bp > runnerBP and player.bp > encoreBP:
+            if player.bp * 1.05 > runnerBP and player.bp > encoreBP:
                 encoreBP = player.bp
                 encoreIndex = i
 
