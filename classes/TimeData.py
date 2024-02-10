@@ -27,6 +27,15 @@ class TimeData:
     def getManagers(self):
         return self.managers
     
+    def hasPlayers(self):
+        return len(self.orders) > 0
+    
+    def hasCheckIns(self):
+        return len(self.checkIns) > 0
+    
+    def hasManagers(self):
+        return len(self.managers) > 0
+    
     def add(self, timeData):
         self.orders.extend(timeData.orders)
         self.checkIns.extend(timeData.checkIns)
