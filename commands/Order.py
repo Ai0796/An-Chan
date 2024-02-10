@@ -36,8 +36,10 @@ class Order(commands.Cog):
         if len(timestamps) == 0 or timestamp > timestamps[-1] + 3600:
             await ctx.respond('No Orders Found')
             return
+        
+        runners = self.bot.config.getRunners(str(ctx.guild.id))
 
-        view = OrderEmbed(data, timestamps, index)
+        view = OrderEmbed(data, timestamps, index, runners)
 
         await ctx.edit(embed=view.generateEmbed(timestamps[index]), view=view)
         view.message = ctx

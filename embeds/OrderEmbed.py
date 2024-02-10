@@ -12,12 +12,13 @@ class OrderEmbed(discord.ui.View):
         1.0801380954836162
     ]
     
-    def __init__(self, data, timestamps, index):
+    def __init__(self, data, timestamps, index, runners):
 
         super().__init__(timeout=60)
         self.timestamps = timestamps
         self.data = data
         self.index = index
+        self.runners = runners
         self.p1encore = False
         self.mobile = False
         self.roomIndex = 0
@@ -60,16 +61,15 @@ class OrderEmbed(discord.ui.View):
             if ('event' in player.name.lower()):
                 runnerBP = max(runnerBP, player.bp)
                 runnerISV = max(runnerISV, player.isv)
-            
-            if ('p0ryg0n_2') in player.name.lower():
-                runnerBP = max(runnerBP, player.bp)
-                runnerISV = max(runnerISV, player.isv)
+                continue
+                
+            for runner in self.runners:
+                if (runner.lower() in player.name.lower()):
+                    runnerBP = max(runnerBP, player.bp)
+                    runnerISV = max(runnerISV, player.isv)
 
         for i in range(len(players)):
             player = players[i]
-
-            # if player.name == 'Lemo':
-            #     encoreIndex = i
 
             if ('encore' in player.name.lower()):
                 encoreIndex = i
@@ -103,11 +103,11 @@ class OrderEmbed(discord.ui.View):
         for name in [x[1].name for x in linkedOrder]:
             maxLength = max(maxLength, len(name))
 
-        Order1 = linkedOrder[0][1].tostr(mobile, maxLength)
-        Order2 = linkedOrder[1][1].tostr(mobile, maxLength)
-        Order3 = linkedOrder[2][1].tostr(mobile, maxLength)
-        Order4 = linkedOrder[3][1].tostr(mobile, maxLength)
-        Order5 = linkedOrder[4][1].tostr(mobile, maxLength)
+        Order1 = linkedOrder[0][1].tostr(mobile, maxLength, self.runners)
+        Order2 = linkedOrder[1][1].tostr(mobile, maxLength, self.runners)
+        Order3 = linkedOrder[2][1].tostr(mobile, maxLength, self.runners)
+        Order4 = linkedOrder[3][1].tostr(mobile, maxLength, self.runners)
+        Order5 = linkedOrder[4][1].tostr(mobile, maxLength, self.runners)
 
         order = f'<t:{timestamp}:f>\r```P1: {Order1} \rP2: {Order2} \rP3: {Order3} \rP4: {Order4} \rP5: {Order5}\r\rISV: {totalisv:.2f} | BP: {avgbp / 1000:.0f}k```'
 
