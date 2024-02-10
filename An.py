@@ -143,15 +143,15 @@ class An(commands.Bot):
             
             for i in range(len(checkIns)):
                 checkIn = checkIns[i]
-                manager = managers[i]
-                if manager:
+                if roomData.hasManagers() and i < len(managers) and managers[i]:
+                    manager = managers[i]
                     id = await profile.getDiscordID(creds, sheetId, manager)
                     if id != None:
                         managerPing = f'<@{id}>'
                 view = CheckInButtons()
                 await view.asyncinit(self, checkIn, timestamps[index], i + 1, 
-                                     self.checkInPrompts[int(serverid)], 
-                                     managerChannel, managerPing)
+                    self.checkInPrompts[int(serverid)], 
+                    managerChannel, managerPing)
                 if timestamp + 2700 < timestamps[index]:
                     await channel.send(f'Next scheduled hour in Room {i + 1} <t:{timestamps[index]}:R>')
                     await channel.send(embed=view.comingUp())
