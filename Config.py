@@ -8,7 +8,8 @@ DEFAULT_CONFIG = {
     'sheetId': None,
     'managerCheckIn': None,
     'managerPing': None,
-    'lastUpdate': int(time.time())
+    'lastUpdate': int(time.time()),
+    'runners': [],
 }
 
 class Config():
@@ -105,3 +106,24 @@ class Config():
     
     def setLastPing(self, serverid, pingTime):
         self.set(serverid, 'lastPing', pingTime)
+        
+    def addRunner(self, serverID, runner):
+        arr = self.data[serverID]['runners']
+        if runner in arr:
+            return
+        arr.append(runner)
+        if len(arr) > 5:
+            arr.pop(0)
+            
+        self.save()
+        
+        return arr
+        
+    def getRunners(self, serverID):
+        return self.data[serverID]['runners']
+    
+    def removeRunner(self, serverID, runner):
+        arr = self.data[serverID]['runners']
+        if runner in arr:
+            arr.remove(runner)
+            self.save()
