@@ -13,7 +13,7 @@ class Player:
     def __str__(self):
         return f'{self.name} | {self.lead}/{self.team}/{self.bp/1000:.0f}k'
     
-    def tostr(self, mobile, maxLength):
+    def tostr(self, mobile, maxLength, runners=[]):
         
         if 'event' in self.name.lower():
             str = f' | Event'
@@ -35,7 +35,7 @@ class Player:
         if padding < 0:
             str = str[:padding]
         
-        if 'event' in self.name.lower():
+        if 'event' in self.name.lower() or any(runner.lower() in self.name.lower() for runner in runners):
             str += f' | Event'
         else:
             str += f' | {self.lead}/{self.team}/{self.bp/1000:.0f}k'
