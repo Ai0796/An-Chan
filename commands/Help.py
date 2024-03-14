@@ -23,7 +23,7 @@ class Help(commands.Cog):
             name="Sheets",
             value="The bot uses a Google Sheet to store data. " +
             "The sheet must be set using `/sheet change [sheet id]`." +
-            "Sample sheets for every event can be found below:\n" +
+            "Sample sheets for every event can be found below, feel free to use them for any run:\n" +
             "- [Universal Schedule (Recommended)](https://docs.google.com/spreadsheets/d/1wVstbFdtUqCfKRixVm2ZvvJBg8wlRuiBhT-9dnUA0X4/copy?usp=sharing)\n" +
             "- [ET Schedule Marathon](https://docs.google.com/spreadsheets/d/1bJwD4zV1e8Kxbth1iD2GC8z6T0_EeUrblaT7vi7A4aA/copy?usp=sharing)\n" +
             "- [PT Schedule Marathon](https://docs.google.com/spreadsheets/d/1r5EeZ-Kz2Sg-R3zOYCusuTMPPNXlgBprT3ZOVINyMMI/copy?usp=sharing)\n" +
