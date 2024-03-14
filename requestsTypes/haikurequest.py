@@ -328,48 +328,46 @@ class haiku(BaseRequest):
                 checkIn = ''
             timestamp = None
 
-            if (len(order) > 0):
+            if len(order) == 0:
+                continue
+                
+            players = []
+            timestamp = re.findall(r'<t:\d*:.>', order)[0]
 
-                if len(order) > 0:
-                    
-                    players = []
-                    timestamp = re.findall(r'<t:\d*:.>', order)[0]
+            for line in order.splitlines():
+                line = line.strip('`').strip()
+                if not pattern.match(line):
+                    continue
+                substr = line[line.index('ISV: '):]
 
-                    for line in order.splitlines():
-                        line = line.strip('`').strip()
-                        if not pattern.match(line):
-                            continue
-                        substr = line[line.index('ISV: '):]
+                name = line[5:line.index('(ISV: ')].strip()
+                vals = re.sub(r'[^\d]', ' ', substr).split()
 
-                        name = line[5:line.index('(ISV: ')].strip()
-                        vals = re.sub(r'[^\d]', ' ', substr).split()
+                try:
+                    if len(vals) < 3:
+                        bp = 0
+                    else:
+                        bp = self.parseBp(vals[2])
+                    player = Player(name, int(vals[0]), int(vals[1]), bp)
+                    players.append(player)
+                except:
+                    player = Player(name, 0, 0, 0)
+                    players.append(player)
 
-                        try:
-                            if len(vals) < 3:
-                                bp = 0
-                            else:
-                                bp = self.parseBp(vals[2])
-                            player = Player(name, int(vals[0]), int(vals[1]), bp)
-                            players.append(player)
-                        except:
-                            player = Player(name, 0, 0, 0)
-                            players.append(player)
+            if len(checkIn) > 0:
+                reoutput = re.findall(r'<t:\d*:.>', checkIn)
+                if len(reoutput) > 0:
+                    timestamp = reoutput[0]
 
-                if len(checkIn) > 0:
-                    reoutput = re.findall(r'<t:\d*:.>', checkIn)
-                    if len(reoutput) > 0:
-                        timestamp = reoutput[0]
+            timestamp = timestamp.split(':')[1]
 
-                timestamp = timestamp.split(':')[1]
-
-                if int(timestamp) in timestampDict:
-                    timestampDict[int(timestamp)].addPlayer(players)
-                    timestampDict[int(timestamp)].addCheckIn(checkIn)
-                else:
-                    timestampDict[int(timestamp)] = TimeData(
-                        int(timestamp[0]), [players], [checkIn])
+            if int(timestamp) in timestampDict:
+                timestampDict[int(timestamp)].addPlayer(players)
+                timestampDict[int(timestamp)].addCheckIn(checkIn)
             else:
-                pass
+                timestampDict[int(timestamp)] = TimeData(
+                    int(timestamp[0]), [players], [checkIn])
+
 
         return timestampDict
 
