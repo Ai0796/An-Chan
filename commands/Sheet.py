@@ -39,7 +39,7 @@ class Sheet(commands.Cog):
         await ctx.respond("Sheet id changed to " + url, ephemeral=True)
         
         if sheetTemplateID == None or sheetTemplateID not in self.ID_DIC:
-            sendStr = "Sheet not recognized, make sure you're using a compatible sheet listed below and that commands work properly:\n" + \
+            sendStr = "Sheet not recognized, make sure you're using a compatible sheet (one of mine or any 3rd party sheets) listed below and that commands work properly:\n" + \
                 "- [Universal Schedule (Recommended)](<https://docs.google.com/spreadsheets/d/1wVstbFdtUqCfKRixVm2ZvvJBg8wlRuiBhT-9dnUA0X4/copy?usp=sharing>)\n" + \
                 "- [ET Schedule Marathon](<https://docs.google.com/spreadsheets/d/1bJwD4zV1e8Kxbth1iD2GC8z6T0_EeUrblaT7vi7A4aA/copy?usp=sharing>)\n" + \
                 "- [PT Schedule Marathon](<https://docs.google.com/spreadsheets/d/1r5EeZ-Kz2Sg-R3zOYCusuTMPPNXlgBprT3ZOVINyMMI/copy?usp=sharing>)\n" + \
