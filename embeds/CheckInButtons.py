@@ -75,9 +75,12 @@ class CheckInButtons(discord.ui.View):
         if self.managerRole is None or self.managerChannel is None or len(self.users) == 0:
             return
         
-        if len(self.checkedIn) < len(self.users):
-            channel = commands.Bot.get_channel(self.bot, int(self.managerChannel))
-            await channel.send(f'Room {self.room} has {len(self.users) - len(self.checkedIn)} missing check ins {self.managerRole}')
+        try:
+            if len(self.checkedIn) < len(self.users):
+                channel = commands.Bot.get_channel(self.bot, int(self.managerChannel))
+                await channel.send(f'Room {self.room} has {len(self.users) - len(self.checkedIn)} missing check ins {self.managerRole}')
+        except:
+            pass
         
     def addCtx(self, ctx):
         self.ctx = ctx
@@ -146,7 +149,7 @@ class CheckInButtons(discord.ui.View):
                 channelid = self.channel[2:-1]
                 channel = self.bot.get_channel(int(channelid))
                 quote = self.proudQuotes[random.randint(0, len(self.proudQuotes) - 1)]
-                await channel.send(f'{quote}\n\nEveryone has checked in, use /order to see room order')
+                await channel.send(f'{quote}\n\nEveryone has checked in, just get in (unless a monitor says something else).')
             except:
                 pass
 
