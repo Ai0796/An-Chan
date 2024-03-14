@@ -7,7 +7,7 @@ class Ai2ify(commands.Cog):
         self.bot = bot
 
     @commands.slash_command(name="ai2ify", description="Turns the bot into one compatible with Ai2")
-    async def toyaify(self, ctx):
+    async def ai2ify(self, ctx):
         guild = ctx.guild
 
         self.bot.config.setRequestType(guild.id, 'Ai2')
