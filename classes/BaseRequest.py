@@ -15,10 +15,14 @@ class BaseRequest():
     
     SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
     EVENTPATH = '../RoboNene/sekai_master/events.json'
+    CLIENT_COUNT = 3
+    CURRENT_CLIENT = 0
+    CLIENTS = ['token1.json', 'token2.json', 'token3.json']
+    TOKEN_FP = 'tokens'
     
-    def __init__(self, token):
-        self.token = token
-    
+    def __init__(self):
+        pass
+        
     def excel_cols(self, n):
         if n < 1:
             raise ValueError("Number must be positive")
@@ -59,10 +63,15 @@ class BaseRequest():
         # created automatically when the authorization flow completes for the first
         # time.
         
+        client = self.CLIENTS[self.CURRENT_CLIENT]
+        client = f"{self.TOKEN_FP}/{client}"
+        self.CURRENT_CLIENT += 1
+        self.CURRENT_CLIENT %= self.CLIENT_COUNT
+        
         creds = None
         
-        if os.path.exists(self.token):
-            creds = Credentials.from_authorized_user_file('token.json', self.SCOPES)
+        if os.path.exists(client):
+            creds = Credentials.from_authorized_user_file(client, self.SCOPES)
         # If there are no (valid) credentials available, let the user log in.
         if not creds or not creds.valid:
             print('refreshing creds')
@@ -73,10 +82,10 @@ class BaseRequest():
                     'credentials.json', self.SCOPES)
                 creds = flow.run_local_server(port=0)
             # Save the credentials for the next run
-            with open(self.token, 'w') as token:
+            with open(client, 'w') as token:
                 token.write(creds.to_json())
                 
-        creds = Credentials.from_authorized_user_file('token.json', self.SCOPES)
+        creds = Credentials.from_authorized_user_file(client, self.SCOPES)
                 
         return creds
 
