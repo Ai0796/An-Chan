@@ -37,6 +37,7 @@ DCCommands = discord.SlashCommandGroup('dc', 'Commands related to DCing')
 from requestsTypes.ai0 import ai0
 from requestsTypes.haikurequest import haiku
 from requestsTypes.ai2 import ai2
+from requestsTypes.lemonade import Lemonade
     
 class An(commands.Bot):
     
@@ -54,9 +55,10 @@ class An(commands.Bot):
         self.DCCommands = discord.SlashCommandGroup('dc', 'Commands related to DCing')
         
         self.profiles = {
-            "An": ai0('token.json'),
-            "Toya": haiku('token.json'),
-            "Ai2": ai2('token.json')
+            "An": ai0(),
+            "Toya": haiku(),
+            "Ai2": ai2(),
+            "Lemonade": Lemonade()
         }
         
         with open(EVENTPATH, 'r', encoding='utf8') as f:
@@ -106,21 +108,24 @@ class An(commands.Bot):
             profile = self.getProfile(serverid)
             sheetId = self.config.getSheetId(serverid)
 
-            if sheetId == None or sheetId.lower() == "none":
+            if sheetId is None or sheetId.lower() == "none":
                 return
 
             channelID = self.config.getCheckInChannel(serverid)
 
-            if channelID == None:
+            if channelID is None:
                 return
 
             channel = commands.Bot.get_channel(self, int(channelID))
+            if channel is None:
+                return
+            
             managerChannel, managerPing = self.config.getManagerCheckInChannel(serverid), self.config.getManagerPing(serverid)
 
             creds = profile.refreshCreds()
             data = await profile.main(creds, sheetId=sheetId)
 
-            if data == None:
+            if data is None:
                 return
 
             timestamps = [key for key in data.keys()]
