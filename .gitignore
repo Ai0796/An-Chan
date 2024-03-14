@@ -9,6 +9,7 @@ node_modules
 ecosystem.config.js
 Lemo.py
 Toya.py
+tokens
 
 *.log
 *.gif
