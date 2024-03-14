@@ -7,8 +7,8 @@ class Player:
         self.name = name.strip()
         self.lead = int(lead)
         self.team = int(team)
-        self.isv = lead + (team - lead)/5.0
-        self.bp = bp
+        self.isv = self.lead + (self.team - self.lead)/5.0
+        self.bp = int(bp)
         
     def __str__(self):
         return f'{self.name} | {self.lead}/{self.team}/{self.bp/1000:.0f}k'
