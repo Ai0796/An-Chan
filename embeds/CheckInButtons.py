@@ -46,6 +46,7 @@ class CheckInButtons(discord.ui.View):
         self.managerRole = managerPing
         
         self.sentMessage = False
+        self.timedOut = False
         
         if len(prompts) > 0:
             if test:
@@ -69,6 +70,7 @@ class CheckInButtons(discord.ui.View):
         self.channel = re.findall(r'<#[0-9]*>', self.message)[0]
 
     async def on_timeout(self):
+        self.timedOut = True
         embed = self.generateEmbed()
         await self.message.edit(embed=embed, view=None)
         
@@ -171,4 +173,4 @@ class CheckInButtons(discord.ui.View):
             
             await self.sendRoomReminder()
             
-        await self.ctx.edit(embed=self.generateEmbed(), view=self)
+        await self.ctx.edit(embed=self.generateEmbed(), view=None if self.timedOut else self)
