@@ -10,6 +10,8 @@ ecosystem.config.js
 Lemo.py
 Toya.py
 tokens
+overlayData
+overlay.py
 
 *.log
 *.gif
