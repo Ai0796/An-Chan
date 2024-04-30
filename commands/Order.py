@@ -1,6 +1,7 @@
 from discord.ext import commands
 import time
 from embeds.OrderEmbed import OrderEmbed
+from discord import File
 
 
 class Order(commands.Cog):
@@ -40,8 +41,14 @@ class Order(commands.Cog):
         runners = self.bot.config.getRunners(str(ctx.guild.id))
 
         view = OrderEmbed(data, timestamps, index, runners)
+        view.generateEmbed(timestamps[index])
 
-        await ctx.edit(embed=view.generateEmbed(timestamps[index]), view=view)
+        if view.file:
+            await ctx.edit(embeds=view.generateEmbed(timestamps[index]), view=view, 
+                files=[view.file])
+        else:
+            await ctx.edit(embed=view.generateEmbed(timestamps[index]), view=view)
+            
         view.message = ctx
 
         elapsed_time = time.time() - start

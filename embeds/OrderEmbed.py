@@ -1,5 +1,7 @@
 import discord
 from scripts.getCurrentEvent import getCurrentEvent
+from overlay import overlay
+from io import BytesIO
 
 class OrderEmbed(discord.ui.View):
     
@@ -23,10 +25,18 @@ class OrderEmbed(discord.ui.View):
         self.mobile = False
         self.roomIndex = 0
         self.team = 0
+        self.image_bytes = False
+        self.imageNum = 0
+        self.fp = "overlayData/output.png"
+        self.file = None
 
     async def on_timeout(self):
         embed = self.generateEmbed(self.timestamps[self.index])
-        await self.message.edit(embed=embed, view=None)
+        if self.file:
+            await self.message.edit(embeds=embed, view=self, 
+                files=[self.file])
+        else:
+            await self.message.edit(embed=embed, view=self)
 
     def generateEmbed(self, timestamp):
 
@@ -137,6 +147,21 @@ class OrderEmbed(discord.ui.View):
         
         order += f'\rSwap <t:{timestamp}:R>'
         
+        if 'pory' in self.runners:
+            embed = discord.Embed(
+                title=f'Room Order {min(self.roomIndex, len(orders) - 1) + 1}', 
+                description=order, 
+                color = 0x00BBDC)
+            
+            secondEmbed = discord.Embed()
+            image = overlay([order[1] for order in linkedOrder])
+            image.save(self.fp, format='PNG')
+            
+            secondEmbed.set_image(url=f"attachment://output.png")
+            self.file = discord.File(self.fp, filename="output.png")
+            
+            return [embed, secondEmbed]
+        
         return discord.Embed(
             title=f'Room Order {min(self.roomIndex, len(orders) - 1) + 1}', 
             description=order, 
@@ -147,27 +172,43 @@ class OrderEmbed(discord.ui.View):
         if (self.index > 0):
             self.index -= 1
         embed = self.generateEmbed(self.timestamps[self.index])
-        await interaction.response.edit_message(embed=embed, view=self)
+        if self.file:
+            await interaction.response.edit_message(embeds=embed, view=self, 
+                files=[self.file])
+        else:
+            await interaction.response.edit_message(embed=embed, view=self)
 
     @discord.ui.button(label='Next', style=discord.ButtonStyle.primary, emoji='➡️')
     async def next(self, button: discord.ui.Button, interaction: discord.Interaction):
         if (self.index < len(self.timestamps) - 1):
             self.index += 1
         embed = self.generateEmbed(self.timestamps[self.index])
-        await interaction.response.edit_message(embed=embed, view=self)
+        if self.file:
+            await interaction.response.edit_message(embeds=embed, view=self, 
+                files=[self.file])
+        else:
+            await interaction.response.edit_message(embed=embed, view=self)
 
     @discord.ui.button(label='P1 Encore', style=discord.ButtonStyle.primary, emoji='🔄')
     async def encore(self, button: discord.ui.Button, interaction: discord.Interaction):
         self.p1encore = not self.p1encore
         embed = self.generateEmbed(self.timestamps[self.index])
-        await interaction.response.edit_message(embed=embed, view=self)
+        if self.file:
+            await interaction.response.edit_message(embeds=embed, view=self, 
+                files=[self.file])
+        else:
+            await interaction.response.edit_message(embed=embed, view=self)
 
     @discord.ui.button(label='Mobile', style=discord.ButtonStyle.primary, emoji='📱')
     async def mobile(self, button: discord.ui.Button, interaction: discord.Interaction):
         self.mobile = not self.mobile
         embed = self.generateEmbed(
             self.timestamps[self.index])
-        await interaction.response.edit_message(embed=embed, view=self)
+        if self.file:
+            await interaction.response.edit_message(embeds=embed, view=self, 
+                files=[self.file])
+        else:
+            await interaction.response.edit_message(embed=embed, view=self)
 
     @discord.ui.button(label='Change Rooms', style=discord.ButtonStyle.primary, emoji='1️⃣')
     async def changeRoom(self, button: discord.ui.Button, interaction: discord.Interaction):
@@ -175,11 +216,19 @@ class OrderEmbed(discord.ui.View):
             self.roomIndex + 1) % len(self.data[self.timestamps[self.index]].orders)
         embed = self.generateEmbed(
             self.timestamps[self.index])
-        await interaction.response.edit_message(embed=embed, view=self)
+        if self.file:
+            await interaction.response.edit_message(embeds=embed, view=self, 
+                files=[self.file])
+        else:
+            await interaction.response.edit_message(embed=embed, view=self)
 
     @discord.ui.button(label='Switch BP', style=discord.ButtonStyle.primary, emoji='🔀', row=2)
     async def switchBP(self, button: discord.ui.Button, interaction: discord.Interaction):
         self.team += 1
         embed = self.generateEmbed(
             self.timestamps[self.index])
-        await interaction.response.edit_message(embed=embed, view=self)
+        if self.file:
+            await interaction.response.edit_message(embed=embed, view=self, 
+                files=[self.file])
+        else:
+            await interaction.response.edit_message(embed=embed, view=self)

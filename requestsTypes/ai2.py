@@ -232,6 +232,43 @@ class ai2(BaseRequest):
 
         return nameDic
     
+    async def getColorDic(self, spreadsheet, sheetId):
+        
+        sheet_metadata = spreadsheet.get(spreadsheetId=sheetId).execute()
+        sheets = sheet_metadata.get('sheets', '')
+
+        title = self.getTeamSheet(sheets)
+
+        colorDic = {}
+        query = '1:1'
+        result = await self.lookup(spreadsheet, f'{title}!{query}', sheetId)
+        values = result.get('values', [])[0]
+
+        values = '|'.join(values).lower().split('|')
+
+        nameIndex = values.index('name')
+        idIndex = values.index('color')
+
+        minVal = min(nameIndex, idIndex)
+        maxVal = max(nameIndex, idIndex)
+
+        minColumn = self.excel_cols(minVal + 1)
+        maxColumn = self.excel_cols(maxVal + 1)
+
+        combinedLookup = f'{title}!{minColumn}2:{maxColumn}1001'
+
+        result = await self.lookup(spreadsheet, combinedLookup, sheetId)
+
+        values = result.get('values', [])
+
+        for row in values:
+            if len(row) < maxVal - minVal + 1:
+                continue
+            if row[nameIndex - minVal]:
+                colorDic[row[nameIndex - minVal].strip().lower()] = row[idIndex - minVal]
+
+        return colorDic
+    
     async def getUserIds(self, spreadsheet, titles, sheetId, nameDic):
 
         lookups = []
@@ -430,6 +467,8 @@ class ai2(BaseRequest):
     async def getOrderVals(self, spreadsheet, combinedLookup, colIndexes, sheetId) -> dict:
         timestampDict = {}
         result = await self.lookupBatch(spreadsheet, combinedLookup, sheetId)
+        
+        colorDic = await self.getColorDic(spreadsheet, sheetId)
 
         values = result.get('valueRanges', 0)
         values = [x['values'] if 'values' in x else [] for x in values]
@@ -471,13 +510,23 @@ class ai2(BaseRequest):
                     strsplit = line[4:].split('|')
                     name = strsplit[0]
                     vals = strsplit[1].split('/')
-                    try:
-                        player = Player(name, int(vals[0]), int(
-                            vals[1]), self.parseBp(vals[2]))
-                        players.append(player)
-                    except:
-                        player = Player(name, 0, 0, 0)
-                        players.append(player)
+                    convertedName = name.strip().lower()
+                    if convertedName in colorDic:
+                        try:
+                            player = Player(name, int(vals[0]), int(
+                                vals[1]), self.parseBp(vals[2]), colorDic[convertedName])
+                            players.append(player)
+                        except:
+                            player = Player(name, 0, 0, 0)
+                            players.append(player)
+                    else:
+                        try:
+                            player = Player(name, int(vals[0]), int(
+                                vals[1]), self.parseBp(vals[2]))
+                            players.append(player)
+                        except:
+                            player = Player(name, 0, 0, 0)
+                            players.append(player)
 
                 if timestamp == 'Timestamp':
                     print(order.splitlines(), order.startswith('New Room Order:'))

@@ -3,12 +3,13 @@ class Player:
     maxLength = 40
     mobileLength = 31
     
-    def __init__(self, name, lead, team, bp):
+    def __init__(self, name, lead, team, bp, color=None):
         self.name = name.strip()
         self.lead = int(lead)
         self.team = int(team)
         self.isv = self.lead + (self.team - self.lead)/5.0
         self.bp = int(bp)
+        self.color = color
         
     def __str__(self):
         return f'{self.name} | {self.lead}/{self.team}/{self.bp/1000:.0f}k'
