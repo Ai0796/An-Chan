@@ -15,9 +15,9 @@ class BaseRequest():
     
     SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
     EVENTPATH = '../RoboNene/sekai_master/events.json'
-    CLIENT_COUNT = 3
+    CLIENTS = ['token1.json', 'token2.json', 'token3.json', 'token4.json', 'token5.json']
     CURRENT_CLIENT = 0
-    CLIENTS = ['token1.json', 'token2.json', 'token3.json']
+    CLIENT_COUNT = len(CLIENTS)
     TOKEN_FP = 'tokens'
     
     def __init__(self):
@@ -67,6 +67,8 @@ class BaseRequest():
         client = f"{self.TOKEN_FP}/{client}"
         self.CURRENT_CLIENT += 1
         self.CURRENT_CLIENT %= self.CLIENT_COUNT
+        
+        print('client:', client)
         
         creds = None
         
