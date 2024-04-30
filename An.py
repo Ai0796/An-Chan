@@ -72,6 +72,9 @@ class An(commands.Bot):
             print(f'{guild.name} - {guild.id}')
             self.config.createServer(guild.id)
             self.checkInPrompts[guild.id] = []
+        
+        idSet = set(str(guild.id) for guild in bot.guilds)
+        self.config.pruneServers(idSet)
 
         print('Starting bot...')
         
@@ -189,6 +192,8 @@ class An(commands.Bot):
     @tasks.loop(hours=1)
     async def checkIn(self, loops=5):
         tz = timezone('America/New_York')
+        idSet = set(str(guild.id) for guild in bot.guilds)
+        self.config.pruneServers(idSet)
         for i in range(loops):
             print(f'{i}: Checking in at {str(datetime.now(tz))}')
 

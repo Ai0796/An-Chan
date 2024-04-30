@@ -52,15 +52,27 @@ class Config():
     def createServer(self, serverid):
         
         serverid = str(serverid)
+        change = False
         
         if serverid in self.data.keys():
             for key in DEFAULT_CONFIG.keys():
                 if key not in self.data[serverid]:
                     self.data[serverid][key] = DEFAULT_CONFIG[key]
+                    change = True
         
         else:
             self.data[serverid] = DEFAULT_CONFIG
+            change = True
 
+        if change:
+            self.save()
+        
+    def pruneServers(self, idSet):
+        for key in list(self.data.keys()):
+            if key not in idSet:
+                print('Pruning server: ' + key)
+                del self.data[key]
+                
         self.save()
 
     def getCheckInChannel(self, serverid):
@@ -108,6 +120,7 @@ class Config():
         self.set(serverid, 'lastPing', pingTime)
         
     def addRunner(self, serverID, runner):
+        serverID = str(serverID)
         arr = self.data[serverID]['runners']
         if runner in arr:
             return
@@ -120,9 +133,11 @@ class Config():
         return arr
         
     def getRunners(self, serverID):
+        serverID = str(serverID)
         return self.data[serverID]['runners']
     
     def removeRunner(self, serverID, runner):
+        serverID = str(serverID)
         arr = self.data[serverID]['runners']
         if runner in arr:
             arr.remove(runner)
