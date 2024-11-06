@@ -2,6 +2,8 @@ from discord.ext import commands
 from scripts.getCurrentEvent import getCurrentEvent
 from embeds.OpenSlotsEmbed import OpenSlotsEmbed
 from discord import Option, SlashCommandOptionType
+from datetime import datetime, timezone
+import pytz
 
 class OpenSlots(commands.Cog):
     def __init__(self, bot):
@@ -30,7 +32,13 @@ class OpenSlots(commands.Cog):
 
         timestamps = [x * 3600 + int(event['startAt']/1000)
                     for x in range(len(data))]
-        days = [int(event['startAt']/1000 - 3600 * 15)]
+        
+        start = datetime.fromtimestamp(int(event['startAt']/1000))
+        start = start.astimezone(pytz.timezone('America/Los_Angeles'))
+        start = start.replace(hour=0, minute=0, second=0, microsecond=0)
+        start = start.astimezone(timezone.utc)
+        
+        days = [int(start.timestamp())]
         while days[-1] < event['rankingAnnounceAt']/1000:
             days.append(days[-1] + 86400)
             
