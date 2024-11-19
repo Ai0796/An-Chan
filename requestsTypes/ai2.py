@@ -190,13 +190,20 @@ class ai2(BaseRequest):
         
         values = result.get('valueRanges', 0)
         hours = []
+        hourDic = {}
         for i in range(0, len(values), 2):
             if 'values' in values[i] and 'values' in values[i + 1]:
                 for players, timestamp in zip(values[i]['values'], values[i + 1]['values']):
-                    if len(players) <= 0:
+
+                    if len(timestamp) <= 0 or len(players) <= 0:
                         continue
+                    if timestamp[-1] not in hourDic:
+                        hourDic[timestamp[-1]] = 0
+                    
                     if len(np.intersect1d(players, names)) > 0:
-                        hours.append([int(timestamp[-1]), 0])
+                        hours.append([int(timestamp[-1]), hourDic[timestamp[-1]]])
+                        
+                    hourDic[timestamp[-1]] += 1
                     
         return hours
     
@@ -469,6 +476,7 @@ class ai2(BaseRequest):
         result = await self.lookupBatch(spreadsheet, combinedLookup, sheetId)
         
         colorDic = await self.getColorDic(spreadsheet, sheetId)
+        hourDic = {}
 
         values = result.get('valueRanges', 0)
         values = [x['values'] if 'values' in x else [] for x in values]
@@ -511,22 +519,20 @@ class ai2(BaseRequest):
                     name = strsplit[0]
                     vals = strsplit[1].split('/')
                     convertedName = name.strip().lower()
-                    if convertedName in colorDic:
-                        try:
-                            player = Player(name, int(vals[0]), int(
-                                vals[1]), self.parseBp(vals[2]), colorDic[convertedName])
-                            players.append(player)
-                        except:
-                            player = Player(name, 0, 0, 0)
-                            players.append(player)
+                    if convertedName in hourDic:
+                        hourDic[convertedName] += 0.5
                     else:
-                        try:
-                            player = Player(name, int(vals[0]), int(
-                                vals[1]), self.parseBp(vals[2]))
-                            players.append(player)
-                        except:
-                            player = Player(name, 0, 0, 0)
-                            players.append(player)
+                        hourDic[convertedName] = 1.0
+                    hour = int(hourDic[convertedName])
+                    try:
+                        player = Player(name, int(vals[0]), int(
+                            vals[1]), self.parseBp(vals[2]), 
+                            colorDic[convertedName] if convertedName in colorDic else None,
+                            hour)
+                        players.append(player)
+                    except:
+                        player = Player(name, 0, 0, 0)
+                        players.append(player)
 
                 if timestamp == 'Timestamp':
                     print(order.splitlines(), order.startswith('New Room Order:'))
