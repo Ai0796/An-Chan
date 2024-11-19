@@ -8,8 +8,6 @@ class Toyaify(commands.Cog):
 
     @commands.slash_command(name="toyaify", description="Turns the bot into Toya")
     async def toyaify(self, ctx):
-        with open('profiles/Toya.png', 'rb') as f:
-            pfp = f.read()
         guild = ctx.guild
 
         self.bot.config.setRequestType(guild.id, 'Toya')

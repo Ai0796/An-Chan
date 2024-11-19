@@ -11,6 +11,7 @@ from glob import glob
 import traceback
 
 import logging
+import aiohttp
 
 logger = logging.getLogger('discord')
 logger.setLevel(logging.DEBUG)
@@ -43,6 +44,7 @@ class An(commands.Bot):
     
     def __init__(self, *args, **options):
         super().__init__(*args, **options)
+        self.http.api_base_url = 'http://localhost:8032/api/v10'
         
         self.checkIn.start()
         
@@ -66,6 +68,11 @@ class An(commands.Bot):
             
         with open(DCSPATH, 'r', encoding='utf8') as f:
             self.DCs = rapidjson.load(f)
+    
+    async def request(self, route, **kwargs):
+        # Modify the endpoint here
+        route.url = route.url.replace("https://discord.com/api/v10", "http://127.0.0.1:8032/api/v10")
+        return await super().request(route, **kwargs)
     
     async def on_ready(self):
         for guild in bot.guilds:
@@ -370,7 +377,19 @@ if __name__ == "__main__":
             continue
         print("Loading: ", fp.replace('/', '.')[:-3])
         bot.load_extension(fp.replace('/', '.')[:-3])
+    
+    @bot.event
+    async def on_application_command_error(context: discord.ApplicationContext, exception: discord.DiscordException) -> None:
+        if isinstance(exception, discord.ext.commands.errors.CommandOnCooldown):
+            await context.respond(f'You are on cooldown. Try again in {exception.retry_after:.2f} seconds.', ephemeral=True)
+        elif isinstance(exception, discord.ext.commands.errors.CommandInvokeError):
+            await context.respond('An error occured while executing this command. Please try again later.', ephemeral=True)
+        else:
+            await context.respond('An error occured while executing this command. Please try again later.', ephemeral=True)
+        raise exception
+    
     bot.add_application_command(DCCommands)
     bot.activity = discord.Activity(name='with こはね', type=discord.ActivityType.playing)
     # remindPing.start()
+    print('Starting bot...')
     bot.run(token)

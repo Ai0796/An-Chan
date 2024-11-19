@@ -38,6 +38,7 @@ class CheckInButtons(discord.ui.View):
         self.message = checkInMessage
         self.timestamp = timestamps
         self.users = set()
+        self.leaving = set()
         self.checkedIn = set()
         self.room = room
         self.ctx = None
@@ -47,6 +48,8 @@ class CheckInButtons(discord.ui.View):
         
         self.sentMessage = False
         self.timedOut = False
+        
+        self.channel = re.findall(r'<#[0-9]*>', self.message)[0]
         
         if len(prompts) > 0:
             if test:
@@ -58,16 +61,26 @@ class CheckInButtons(discord.ui.View):
                 0, len(self.checkInSections) - 1)]
             
         self.quote += ' '
+        
+        if 'otsu' in self.message.lower():
+            idx = self.message.lower().index('otsu')
+            joining = re.findall(r'<@[0-9]*>', self.message[:idx])
+            leaving = re.findall(r'<@[0-9]*>', self.message[idx:])
 
-        result = re.findall(r'<@[0-9]*>', self.message)
+            for user in joining:
+                self.users.add(user[2:-1])
+                
+            for user in leaving:
+                self.leaving.add(user[2:-1])
 
-        for user in result:
-            self.users.add(user[2:-1])
+        else:
+            result = re.findall(r'<@[0-9]*>', self.message)
+
+            for user in result:
+                self.users.add(user[2:-1])
             
         if len(self.users) == 0:
             return
-        
-        self.channel = re.findall(r'<#[0-9]*>', self.message)[0]
 
     async def on_timeout(self):
         self.timedOut = True
@@ -116,6 +129,11 @@ class CheckInButtons(discord.ui.View):
                 embedStr += f'Checked In: <@{user}>\n'
             else:
                 embedStr += f'Not Checked In: <@{user}>\n'
+                
+        if len(self.leaving) > 0:
+            embedStr += '\nLeaving:\n'
+            for user in self.leaving:
+                embedStr += f'<@{user}>\n'
 
         return discord.Embed(
             title=f'Check In (Room {self.room})', 
@@ -138,6 +156,11 @@ class CheckInButtons(discord.ui.View):
 
         for user in self.users:
             embedStr += f'<@{user}>\n'
+            
+        if len(self.leaving) > 0:
+            embedStr += '\nLeaving:\n'
+            for user in self.leaving:
+                embedStr += f'<@{user}>\n'
 
         return discord.Embed(
             title=f'Check In (Room {self.room})', 
