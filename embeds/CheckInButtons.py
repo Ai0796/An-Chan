@@ -64,8 +64,8 @@ class CheckInButtons(discord.ui.View):
         
         if 'otsu' in self.message.lower():
             idx = self.message.lower().index('otsu')
-            joining = re.findall(r'<@[0-9]*>', self.message[:idx])
-            leaving = re.findall(r'<@[0-9]*>', self.message[idx:])
+            joining = re.findall(r'<@[a-zA-Z0-9]*>', self.message[:idx])
+            leaving = re.findall(r'<@[a-zA-Z0-9]*>', self.message[idx:])
 
             for user in joining:
                 self.users.add(user[2:-1])
@@ -74,7 +74,7 @@ class CheckInButtons(discord.ui.View):
                 self.leaving.add(user[2:-1])
 
         else:
-            result = re.findall(r'<@[0-9]*>', self.message)
+            result = re.findall(r'<@[a-zA-Z0-9]*>', self.message)
 
             for user in result:
                 self.users.add(user[2:-1])
