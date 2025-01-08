@@ -6,6 +6,7 @@ import numpy as np
 from classes.Player import Player
 from classes.TimeData import TimeData
 from classes.BaseRequest import BaseRequest
+from collections import defaultdict
 
 class ai2(BaseRequest):
     
@@ -55,7 +56,7 @@ class ai2(BaseRequest):
             for hour in hours:
                 if len(hour) < 2:
                     continue
-                hourDic[hour[0]] = max(0, hourDic[hour[0]]) + hour[1]
+                hourDic[hour[0]] = max(0, hourDic.get(hour[0], -1)) + hour[1]
 
             return list(hourDic.values()), event
 
