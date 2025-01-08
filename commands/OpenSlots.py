@@ -51,7 +51,7 @@ class OpenSlots(commands.Cog):
             timestamps.append(timestamp)
             timestamp += 3600
 
-        indexes = [0] + [i for i, x in enumerate(timestamps) if x in days]
+        indexes = [0] + [i for i, x in enumerate(timestamps) if x in days and i != 0]
         view = OpenSlotsEmbed(indexes, timestamps, data, int(event['startAt']/1000), standby)
 
         view.set_message(await ctx.edit(embed=view.generateEmbed(), view=view))
