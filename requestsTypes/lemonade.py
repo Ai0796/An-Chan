@@ -1,3 +1,4 @@
+from collections import defaultdict
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 import re
@@ -13,7 +14,7 @@ EVENTPATH = '../RoboNene/sekai_master/events.json'
 class Lemonade(BaseRequest):
     
     ROOMS = ["g1", "g2"]
-    TEAMS = ["player db"]
+    TEAMS = ["player db", "playerdb"]
     
     def getTeamSheet(self, sheets) -> str:
         for sheet in sheets:
@@ -49,8 +50,6 @@ class Lemonade(BaseRequest):
             days = self.getScheduleSheets(sheets)
 
             hours = await self.getOpenSlots(spreadsheet, days, sheetId)
-            
-            print(hours)
 
             event = self.getCurrentEvent(hours[0][0])
 
@@ -65,6 +64,127 @@ class Lemonade(BaseRequest):
         except HttpError as err:
             print(err)
 
+    async def getPings(self, creds, sheetId, eventData):
+        try:
+            service = build('sheets', 'v4', credentials=creds)
+
+            # Call the Sheets API
+            spreadsheet = service.spreadsheets()
+            sheet_metadata = spreadsheet.get(spreadsheetId=sheetId).execute()
+            sheets = sheet_metadata.get('sheets', '')
+
+            teams = self.getTeamSheet(sheets)
+            days = self.getScheduleSheets(sheets)
+
+            nameDic = await self.getNameDic(spreadsheet, teams, sheetId)
+
+            if len(nameDic) < 1:
+                return []
+
+            hours = await self.getUserIds(spreadsheet, days, sheetId, nameDic)
+            
+            # hourDic = {
+            #     timestamp: set() for timestamp in np.arange(int(eventData['startAt']/1000), int(eventData['rankingAnnounceAt']/1000), 3600)
+            # }
+            hourDic = defaultdict(set)
+
+            for hour in hours:
+                hourDic[hour[0]].update(hour[1])
+
+            hourDic = {k: v for k, v in sorted(
+                hourDic.items(), key=lambda item: item[0])}
+            return hourDic
+
+        except HttpError as err:
+            print(err)
+            
+    async def getUserIds(self, spreadsheet, titles, sheetId, nameDic):
+
+        query = '1:1'
+        lookups = []
+        for title in titles:
+            lookups.append(f'{title}!{query}')
+
+        result = await self.lookupBatch(spreadsheet, lookups, sheetId)
+        values = result.get('valueRanges', 0)
+        values = [x['values'] for x in values]
+
+        lookups = []
+        timestampIndexes = []
+
+        for valueSets, title in zip(values, titles):
+
+            valueSets = valueSets[0]
+
+            valueSets = '|'.join(valueSets).lower().split('|')
+
+            ## meiya version
+            playerIndexes = [i for i, x in enumerate(valueSets) if x in [
+                'p1', 'p2', 'p3', 'p4', 'p5']]
+            ## Castelel version
+            if len(playerIndexes) < 1:
+                playerIndexes = [i for i, x in enumerate(valueSets) if x in [
+                    'runner', '2', '3', '4', '5']]
+
+            minVal = min(playerIndexes)
+            maxVal = max(playerIndexes)
+
+            timestampIndex = valueSets.index('epoch')
+
+            combinedLookup = f'{title}!{self.excel_cols(minVal + 1)}4:{self.excel_cols(maxVal + 1)}500'
+            timestampLookup = f'{title}!{self.excel_cols(timestampIndex + 1)}4:{self.excel_cols(timestampIndex + 1)}500'
+
+            lookups.append(combinedLookup)
+            lookups.append(timestampLookup)
+            timestampIndexes.append(timestampIndex)
+
+        result = await self.lookupBatch(spreadsheet, lookups, sheetId)
+
+        values = result.get('valueRanges', 0)
+        pings = []
+        for i in range(0, len(values), 2):
+            if 'values' in values[i] and 'values' in values[i + 1]:
+                for players, timestamp in zip(values[i]['values'], values[i + 1]['values']):
+                    if len(players) <= 0 or len(timestamp) <= 0:
+                        continue
+                    pings.append([int(timestamp[-1]), [nameDic[x] for x in players if x in nameDic]])
+
+        return pings
+            
+    async def getNameDic(self, spreadsheet, title, sheetId):
+
+        nameDic = {}
+        query = '1:1'
+        result = await self.lookup(spreadsheet, f'{title}!{query}', sheetId)
+        values = result.get('values', [])[0]
+
+        values = '|'.join(values).lower().split('|')
+
+        nameIndex = values.index('name')
+        try:
+            idIndex = values.index('discord id')
+        except:
+            idIndex = values.index('id')
+
+        minVal = min(nameIndex, idIndex)
+        maxVal = max(nameIndex, idIndex)
+
+        minColumn = self.excel_cols(minVal + 1)
+        maxColumn = self.excel_cols(maxVal + 1)
+
+        combinedLookup = f'{title}!{minColumn}2:{maxColumn}1001'
+
+        result = await self.lookup(spreadsheet, combinedLookup, sheetId)
+
+        values = result.get('values', [])
+
+        for row in values:
+            if len(row) < maxVal - minVal + 1:
+                continue
+            if row[nameIndex - minVal]:
+                nameDic[row[nameIndex - minVal]] = row[idIndex - minVal]
+
+        return nameDic
 
     async def getOpenSlots(self, spreadsheet, titles, sheetId):
 
@@ -88,9 +208,15 @@ class Lemonade(BaseRequest):
 
             indexes = [i for i, x in enumerate(valueSets) if x in [
                 'p1', 'p2', 'p3', 'p4', 'p5', 'epoch']]
+            if len(indexes) != 6:
+                indexes = [i for i, x in enumerate(valueSets) if x in [
+                    'runner', '2', '3', '4', '5', 'epoch']]
 
             playerIndexes = [i for i, x in enumerate(valueSets) if x in [
                 'p1', 'p2', 'p3', 'p4', 'p5']]
+            if len(playerIndexes) < 1:
+                playerIndexes = [i for i, x in enumerate(valueSets) if x in [
+                    'runner', '2', '3', '4', '5']]
 
             minVal = min(indexes)
             maxVal = max(indexes)
@@ -100,7 +226,7 @@ class Lemonade(BaseRequest):
             minColumn = self.excel_cols(minVal + 1)
             maxColumn = self.excel_cols(maxVal + 1)
 
-            combinedLookup = f'{title}!{minColumn}3:{maxColumn}300'
+            combinedLookup = f'{title}!{minColumn}3:{maxColumn}500'
 
             lookups.append(combinedLookup)
             timestampIndexes.append(timestampIndex)
@@ -137,7 +263,10 @@ class Lemonade(BaseRequest):
         values = '|'.join(values).lower().split('|')
 
         nameIndex = values.index('name')
-        idIndex = values.index('discord id')
+        try:
+            idIndex = values.index('discord id')
+        except:
+            idIndex = values.index('id')
 
         minVal = min(nameIndex, idIndex)
         maxVal = max(nameIndex, idIndex)
@@ -183,14 +312,17 @@ class Lemonade(BaseRequest):
 
             playerIndexes = [i for i, x in enumerate(valueSets) if x in [
                 'p1', 'p2', 'p3', 'p4', 'p5']]
+            if len(playerIndexes) < 1:
+                playerIndexes = [i for i, x in enumerate(valueSets) if x in [
+                    'runner', '2', '3', '4', '5']]
 
             minVal = min(playerIndexes)
             maxVal = max(playerIndexes)
 
             timestampIndex = valueSets.index('epoch')
 
-            combinedLookup = f'{title}!{self.excel_cols(minVal + 1)}3:{self.excel_cols(maxVal + 1)}300'
-            timestampLookup = f'{title}!{self.excel_cols(timestampIndex + 1)}3:{self.excel_cols(timestampIndex + 1)}300'
+            combinedLookup = f'{title}!{self.excel_cols(minVal + 1)}3:{self.excel_cols(maxVal + 1)}500'
+            timestampLookup = f'{title}!{self.excel_cols(timestampIndex + 1)}3:{self.excel_cols(timestampIndex + 1)}500'
 
             lookups.append(combinedLookup)
             lookups.append(timestampLookup)
@@ -276,11 +408,14 @@ class Lemonade(BaseRequest):
                 return None
 
             timestampIndex = values.index('epoch')
-            checkInIndex = values.index('check-in')
+            if 'check-in' in values:
+                checkInIndex = values.index('check-in')
+            else:
+                checkInIndex = values.index('ci')
 
             combinedLookup += [
-                f'{title}!{self.excel_cols(timestampIndex + 1)}3:{self.excel_cols(timestampIndex + 1)}300',
-                f'{title}!{self.excel_cols(checkInIndex + 1)}3:{self.excel_cols(checkInIndex + 1)}300'
+                f'{title}!{self.excel_cols(timestampIndex + 1)}3:{self.excel_cols(timestampIndex + 1)}500',
+                f'{title}!{self.excel_cols(checkInIndex + 1)}3:{self.excel_cols(checkInIndex + 1)}500'
             ]
 
         return combinedLookup
@@ -301,11 +436,13 @@ class Lemonade(BaseRequest):
             checkInLookup = values[i + 1]
             
             for i, timestamp in enumerate(timestampLookup):
+                if len(timestamp) < 1:
+                    continue
                 timestamps.append(timestamp[0])
                 if i >= len(checkInLookup):
-                    checkIns.append('')
+                    checkIns.append('<#1>')
                 elif len(checkInLookup[i]) < 1:
-                    checkIns.append('')
+                    checkIns.append('<#1>')
                 else:
                     checkIns.append(checkInLookup[i][0])
                 
@@ -334,6 +471,8 @@ class Lemonade(BaseRequest):
             values = [x['values'] if 'values' in x else [] for x in values]
             
             for value in values:
+                if len(value) < 1:
+                    continue
                 value = value[0][0]
                 timestamps = re.findall(r'<t:[0-9]+:R>', value.replace('\r', ''))
                 if len(timestamps) == 0:
@@ -363,7 +502,7 @@ class Lemonade(BaseRequest):
                         timestamp, [players], [])
                 except Exception as e:
                     print(e)
-
+                    
         return timestampDict
 
 
@@ -395,7 +534,7 @@ class Lemonade(BaseRequest):
             # Sorts keys
             myKeys = list(timestampDict.keys())
             myKeys.sort()
-            return {i: timestampDict[i] for i in myKeys if timestampDict[i].hasPlayers()}
+            return {i: timestampDict[i] for i in myKeys}
 
         except HttpError as err:
             print(err)

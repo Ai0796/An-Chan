@@ -3,6 +3,8 @@ from discord.ext import commands
 import discord
 import time
 from embeds.PingsEmbed import PingsEmbed
+from datetime import datetime
+from pytz import timezone
 
 class Pings(commands.Cog):
     def __init__(self, bot):
@@ -23,27 +25,34 @@ class Pings(commands.Cog):
         creds = profile.refreshCreds()
         event = getCurrentEvent()
         data = await profile.getPings(creds, sheetId, event)
+        
+        firstTimestamp = min(data.keys())
 
-        timestamps = [x * 3600 + int(event['startAt']/1000)
+        timestamps = [x * 3600 + firstTimestamp
                       for x in range(len(data))]
-        days = [int(event['startAt']/1000 - 3600 * 15)]
-        while days[-1] < event['rankingAnnounceAt']/1000:
+        
+        startDate = datetime.fromtimestamp(firstTimestamp)
+        startDate = startDate.astimezone(timezone('America/Los_Angeles'))
+        startDate = startDate.replace(hour=0, minute=0, second=0, microsecond=0) ## Set to midnight
+        startDate = int(startDate.timestamp())
+        
+        days = [startDate]
+        while days[-1] < max(timestamps):
             days.append(days[-1] + 86400)
 
         days.append(days[-1] + 86400)
 
         timestamps = []
 
-        timestamp = int(event['startAt']/1000)
-        while timestamp < days[-1]:
+        timestamp = int(startDate)
+        while timestamp < max(data.keys()):
             timestamps.append(timestamp)
             timestamp += 3600
             
-        data = [data[timestamp] for timestamp in data if timestamp in timestamps]
-
-        indexes = [0] + [i for i, x in enumerate(timestamps) if x in days]
-        view = PingsEmbed(indexes, timestamps, data,
-                              int(event['startAt']/1000))
+        data = [data[timestamp] if timestamp in data else [] for timestamp in timestamps]
+        indexes = [0] + [i for i, x in enumerate(timestamps) if x in days and i != 0] + [len(timestamps) - 1]
+        
+        view = PingsEmbed(indexes, timestamps, data, firstTimestamp)
 
         view.set_message(await ctx.edit(embed=view.generateEmbed(), view=view))
 
