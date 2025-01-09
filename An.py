@@ -215,6 +215,8 @@ class An(commands.Bot):
 
             await asyncio.gather(*processes)
             
+            self.config.commit()
+            
             await asyncio.sleep(60)
 
     @checkIn.before_loop
