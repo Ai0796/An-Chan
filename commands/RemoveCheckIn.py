@@ -9,7 +9,7 @@ class RemoveCheckIn(commands.Cog):
     @default_permissions(manage_messages=True)
     async def removecheckin(self, ctx):
 
-        self.bot.config.setCheckInChannel(ctx.guild.id, None)
+        await self.bot.config.setCheckInChannel(ctx.guild.id, None)
 
         await ctx.respond("Check In Channel removed, use /changecheckin to re-enable check-ins", ephemeral=True)
 

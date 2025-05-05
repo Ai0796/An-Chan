@@ -3,7 +3,10 @@ import rapidjson
 import os
 
 import sqlalchemy
-from sqlalchemy.orm import relationship, declarative_base, sessionmaker
+from sqlalchemy.orm import relationship, declarative_base
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from sqlalchemy.exc import PendingRollbackError, SQLAlchemyError
+from sqlalchemy import select
 
 DEFAULT_CONFIG = {
     'checkIn': None,
@@ -27,148 +30,142 @@ class Server(Base):
     managerPing = sqlalchemy.Column(sqlalchemy.BigInteger)
     lastUpdate = sqlalchemy.Column(sqlalchemy.BigInteger)
     lastPing = sqlalchemy.Column(sqlalchemy.BigInteger)
-    
+
     runners = relationship('Runner', back_populates='server')
-    
+
 class Runner(Base):
     __tablename__ = 'Runner'
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
     serverid = sqlalchemy.Column(sqlalchemy.String, sqlalchemy.ForeignKey('Server.serverid'))
     runner = sqlalchemy.Column(sqlalchemy.String)
-    
+
     server = relationship('Server', back_populates='runners')
 
 class Config():
-    def __init__(self, path = 'config/serverconfig.json'):
+    def __init__(self, path='config/serverconfig.json'):
         self.data = {}
         self.path = path
-        
-        engine = sqlalchemy.create_engine('sqlite:///config/serverconfig.db')
-        Base.metadata.create_all(engine)
-        
-        Session = sessionmaker(bind=engine)
-        self.session = Session()
-        
-    def createServer(self, serverID):
-        
-        if self.get(serverID) != None:
-            return -1
-        
-        server = Server(
-            serverid = serverID,
-            checkIn = None,
-            requestType = 'An',
-            sheetId = None,
-            managerCheckIn = None,
-            managerPing = None,
-            lastUpdate = int(time.time())
-        )
-        
-        self.session.add(server)
-        return 0
-    
-    def get(self, serverid):
-        serverid = str(serverid)
-        return self.session.query(Server).filter(Server.serverid == serverid).first()
-    
-    def set(self, serverid, key, value):
-        serverid = str(serverid)
-        server = self.get(serverid)
-        setattr(server, key, value)
-        self.session.commit()
-        
-        return 0
-        
-    def pruneServers(self, idSet):
-        for server in self.session.query(Server).all():
-            if server.serverid not in idSet:
-                instance = self.session.query(Server).filter(Server.serverid == server.serverid).first()
-                self.session.delete(instance)
 
-    def getCheckInChannel(self, serverid):
-        return self.get(serverid).checkIn
+        self.engine = create_async_engine('sqlite+aiosqlite:///config/serverconfig.db')
+        self.async_session = async_sessionmaker(bind=self.engine, expire_on_commit=False)
 
-    def setCheckInChannel(self, serverid, channelid):
-        self.set(serverid, 'checkIn', channelid)
-        
-    def setManagerCheckInChannel(self, serverid, channelid):
-        self.set(serverid, 'managerCheckIn', channelid)
-        
-    def getManagerCheckInChannel(self, serverid):
-        return self.get(serverid).managerCheckIn
-    
-    def setManagerPing(self, serverid, roleID):
-        self.set(serverid, 'managerPing', roleID)
-        
-    def getManagerPing(self, serverid):
-        return self.get(serverid).managerPing
-
-    def getRequestType(self, serverid):
-        return self.get(serverid).requestType
-
-    def setRequestType(self, serverid, requestType):
-        self.set(serverid, 'requestType', requestType)
-
-    def getSheetId(self, serverid):
-        return self.get(serverid).sheetId
-
-    def setSheetId(self, serverid, sheetId):
-        self.set(serverid, 'sheetId', sheetId)
-
-    def getTime(self, serverid):
-        return self.get(serverid).lastUpdate
-    
-    def getServers(self):
-        return [server.serverid for server in self.session.query(Server).all()]
-    
-    def getLastPing(self, serverid):
-        if 'lastPing' not in self.get(serverid):
+    async def createServer(self, serverID):
+        async with self.async_session() as session:
+            async with session.begin():
+                result = await session.execute(select(Server).where(Server.serverid == str(serverID)))
+                server = result.scalars().first()
+                if server:
+                    return -1
+                server = Server(serverid=str(serverID), lastUpdate=int(time.time()))
+                session.add(server)
+            await session.commit()
             return 0
-        return self.get(serverid).lastPing
-    
-    def setLastPing(self, serverid, pingTime):
-        self.set(serverid, 'lastPing', pingTime)
-        
-    def addRunner(self, serverID, runner):
-        serverID = str(serverID)
-        arr = self.session.query(Runner).filter(Runner.serverid == serverID).all()
-        for run in arr:
-            if run.runner == runner:
-                return -1
-        
-        runner = Runner(serverid = serverID, runner = runner)
-        self.session.add(runner)
-        
-        arr = self.session.query(Runner).filter(Runner.serverid == serverID).all()
-        
-        return [run.runner for run in arr]
-        
-    def getRunners(self, serverID):
-        serverID = str(serverID)
-        arr = self.session.query(Runner).filter(Runner.serverid == serverID).all()
-        return [run.runner for run in arr]
-    
-    def removeRunner(self, serverID, runner):
-        serverID = str(serverID)
-        arr = self.session.query(Runner).filter(Runner.serverid == serverID).all()
 
-        for run in arr:
-            if run.runner == runner:
-                self.session.delete(run)
-                break
-            
-    def commit(self):
-        self.session.commit()
-            
-if __name__ == '__main__':
-    ## Testing
-    config = Config()
-    
-    instance = config.session.query(Server).filter(Server.sheetId == '1lt6ni5bF1bacV9wS9S_NDgtjBZqijLR5UG4BW1b3FHM').all()
-    for i in instance:
-        if i.serverid == '422851664236642307' or i.serverid == '1075866706578264107':
-            continue
-        config.session.delete(i)
-    config.session.commit()
-    # config.session.delete(instance)
-    # config.session.commit()
+    async def get(self, serverid):
+        async with self.async_session() as session:
+            try:
+                result = await session.execute(select(Server).where(Server.serverid == str(serverid)))
+                return result.scalars().first()
+            except SQLAlchemyError:
+                return None
+
+    async def set(self, serverid, key, value):
+        async with self.async_session() as session:
+            try:
+                result = await session.execute(select(Server).where(Server.serverid == str(serverid)))
+                server = result.scalars().first()
+                if server:
+                    setattr(server, key, value)
+                    setattr(server, 'lastUpdate', int(time.time()))
+                    await session.commit()
+            except SQLAlchemyError:
+                await session.rollback()
+
+    async def pruneServers(self, idSet):
+        async with self.async_session() as session:
+            result = await session.execute(select(Server))
+            for server in result.scalars().all():
+                if server.serverid not in idSet:
+                    await session.delete(server)
+            await session.commit()
+
+    async def getCheckInChannel(self, serverid):
+        server = await self.get(serverid)
+        return server.checkIn if server else None
+
+    async def setCheckInChannel(self, serverid, channelid):
+        await self.set(serverid, 'checkIn', channelid)
+
+    async def setManagerCheckInChannel(self, serverid, channelid):
+        await self.set(serverid, 'managerCheckIn', channelid)
+
+    async def getManagerCheckInChannel(self, serverid):
+        server = await self.get(serverid)
+        return server.managerCheckIn if server else None
+
+    async def setManagerPing(self, serverid, roleID):
+        await self.set(serverid, 'managerPing', roleID)
+
+    async def getManagerPing(self, serverid):
+        server = await self.get(serverid)
+        return server.managerPing if server else None
+
+    async def getRequestType(self, serverid):
+        server = await self.get(serverid)
+        return server.requestType if server else None
+
+    async def setRequestType(self, serverid, requestType):
+        await self.set(serverid, 'requestType', requestType)
+
+    async def getSheetId(self, serverid):
+        server = await self.get(serverid)
+        return server.sheetId if server else None
+
+    async def setSheetId(self, serverid, sheetId):
+        await self.set(serverid, 'sheetId', sheetId)
+
+    async def getTime(self, serverid):
+        server = await self.get(serverid)
+        return server.lastUpdate if server else None
+
+    async def getServers(self):
+        async with self.async_session() as session:
+            result = await session.execute(select(Server))
+            return [server.serverid for server in result.scalars().all()]
+
+    async def getLastPing(self, serverid):
+        server = await self.get(serverid)
+        return server.lastPing if server else None
+
+    async def setLastPing(self, serverid, pingTime):
+        await self.set(serverid, 'lastPing', pingTime)
+
+    async def addRunner(self, serverID, runner):
+        serverID = str(serverID)
+        async with self.async_session() as session:
+            result = await session.execute(select(Runner).where(Runner.serverid == serverID))
+            existing = result.scalars().all()
+            if any(r.runner == runner for r in existing):
+                return -1
+            new_runner = Runner(serverid=serverID, runner=runner)
+            session.add(new_runner)
+            await session.commit()
+            result = await session.execute(select(Runner).where(Runner.serverid == serverID))
+            return [r.runner for r in result.scalars().all()]
+
+    async def getRunners(self, serverID):
+        serverID = str(serverID)
+        async with self.async_session() as session:
+            result = await session.execute(select(Runner).where(Runner.serverid == serverID))
+            return [r.runner for r in result.scalars().all()]
+
+    async def removeRunner(self, serverID, runner):
+        serverID = str(serverID)
+        async with self.async_session() as session:
+            result = await session.execute(select(Runner).where(Runner.serverid == serverID))
+            runners = result.scalars().all()
+            for run in runners:
+                if run.runner == runner:
+                    await session.delete(run)
+                    break
+            await session.commit()

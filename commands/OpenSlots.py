@@ -18,7 +18,7 @@ class OpenSlots(commands.Cog):
         await ctx.defer()
 
         profile = self.bot.getProfile(ctx.guild.id)
-        sheetId = self.bot.config.getSheetId(ctx.guild.id)
+        sheetId = await self.bot.config.getSheetId(ctx.guild.id)
 
         if sheetId == None:
             await ctx.edit('No sheet set for this server')

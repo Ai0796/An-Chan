@@ -440,9 +440,9 @@ class Lemonade(BaseRequest):
                     continue
                 timestamps.append(timestamp[0])
                 if i >= len(checkInLookup):
-                    checkIns.append('<#1>')
+                    checkIns.append('')
                 elif len(checkInLookup[i]) < 1:
-                    checkIns.append('<#1>')
+                    checkIns.append('')
                 else:
                     checkIns.append(checkInLookup[i][0])
                 

@@ -79,18 +79,22 @@ class An(commands.Bot):
             print(f'{guild.name} - {guild.id}')
             self.config.createServer(guild.id)
             self.checkInPrompts[guild.id] = []
+            await asyncio.sleep(0)
         
         idSet = set(str(guild.id) for guild in bot.guilds)
-        self.config.pruneServers(idSet)
+        await self.config.pruneServers(idSet)
 
         print('Starting bot...')
         
     async def on_guild_join(self, guild):
-        self.config.createServer(guild.id)
+        await self.config.createServer(guild.id)
         self.checkInPrompts[guild.id] = []
         
-    def getProfile(self, serverid):
-        return self.profiles[self.config.getRequestType(serverid)]
+    async def getProfile(self, serverid):
+        try:
+            return self.profiles[await self.config.getRequestType(serverid)]
+        except:
+            return self.profiles['An']
     
     def getNextIndex(self, timestamps, wantedTimestamp):
         index = 0
@@ -111,17 +115,19 @@ class An(commands.Bot):
     async def checkInServer(self, serverid, manual=False):
         try:
             
-            lastPing = self.config.getTime(serverid)
+            lastPing = await self.config.getLastPing(serverid)
+            if lastPing is None:
+                lastPing = 0
             if lastPing + 2700 > time.time() and not manual:
                 return
 
-            profile = self.getProfile(serverid)
-            sheetId = self.config.getSheetId(serverid)
+            profile = await self.getProfile(serverid)
+            sheetId = await self.config.getSheetId(serverid)
 
             if sheetId is None or sheetId.lower() == "none":
                 return
 
-            channelID = self.config.getCheckInChannel(serverid)
+            channelID = await self.config.getCheckInChannel(serverid)
 
             if channelID is None:
                 return
@@ -130,7 +136,7 @@ class An(commands.Bot):
             if channel is None:
                 return
             
-            managerChannel, managerPing = self.config.getManagerCheckInChannel(serverid), self.config.getManagerPing(serverid)
+            managerChannel, managerPing = await self.config.getManagerCheckInChannel(serverid), self.config.getManagerPing(serverid)
 
             creds = profile.refreshCreds()
             data = await profile.main(creds, sheetId=sheetId)
@@ -165,7 +171,7 @@ class An(commands.Bot):
                         managerPing = f'<@{id}>'
                 view = CheckInButtons()
                 await view.asyncinit(self, checkIn, timestamps[index], i + 1, 
-                    self.checkInPrompts[int(serverid)], 
+                    self.checkInPrompts.get(int(serverid), []), 
                     managerChannel, managerPing)
                 if timestamp + 2700 < timestamps[index]:
                     await channel.send(f'Next scheduled hour in Room {i + 1} <t:{timestamps[index]}:R>')
@@ -178,15 +184,16 @@ class An(commands.Bot):
                 view.addCtx(ctx)
                 self.checkInMessages.append(view)
 
-            self.config.setLastPing(serverid, int(time.time()))
             await asyncio.gather(*p)
+            
+            return serverid
             
         except Exception:
             print(traceback.format_exc())
             print('Error in check in ping')
             print(serverid)
 
-            channelID = self.config.getCheckInChannel(serverid)
+            channelID = await self.config.getCheckInChannel(serverid)
 
             if channelID == None:
                 return
@@ -195,27 +202,32 @@ class An(commands.Bot):
                 await channel.send('Something went wrong with the check in ping')
             except Exception as e:
                 print(e)
+                
+            return False
 
     @tasks.loop(hours=1)
     async def checkIn(self, loops=5):
         tz = timezone('America/New_York')
         idSet = set(str(guild.id) for guild in bot.guilds)
-        self.config.pruneServers(idSet)
+        await self.config.pruneServers(idSet)
         for i in range(loops):
             print(f'{i}: Checking in at {str(datetime.now(tz))}')
 
             processes = []
             timestamp = time.time()
 
-            for serverid in self.config.getServers():
+            for serverid in await self.config.getServers():
 
                 # Checks if the last update was more than 15 days ago
-                if self.config.getTime(serverid) + 86400 * 15 > timestamp:
+                if await self.config.getTime(serverid) + 86400 * 15 > timestamp:
                     processes.append(self.checkInServer(serverid))
 
-            await asyncio.gather(*processes)
+            sucesses = await asyncio.gather(*processes)
             
-            self.config.commit()
+            for serverid in sucesses:
+                if not serverid:
+                    continue
+                await self.config.setLastPing(serverid, int(time.time()))
             
             await asyncio.sleep(60)
 
@@ -238,7 +250,7 @@ class An(commands.Bot):
         await asyncio.sleep((future-now).seconds)
 
     async def on_guild_join(self, guild):
-        self.config.createServer(guild.id)
+        await self.config.createServer(guild.id)
         self.checkInPrompts[guild.id] = []
     
 # class CheckInButtons(CheckInButtons):
@@ -373,7 +385,11 @@ class RemindButtons(discord.ui.View):
 from commands.Sheet import Sheet
 
 if __name__ == "__main__":
-    bot = An(command_prefix='/')
+    
+    intents = discord.Intents.default()
+    intents.members = True
+    
+    bot = An(command_prefix='/', intents=intents)
     for fp in glob('commands/*.py'):
         if fp.endswith('__init__.py'):
             continue
@@ -382,13 +398,11 @@ if __name__ == "__main__":
     
     @bot.event
     async def on_application_command_error(context: discord.ApplicationContext, exception: discord.DiscordException) -> None:
-        if isinstance(exception, discord.ext.commands.errors.CommandOnCooldown):
-            await context.respond(f'You are on cooldown. Try again in {exception.retry_after:.2f} seconds.', ephemeral=True)
-        elif isinstance(exception, discord.ext.commands.errors.CommandInvokeError):
-            await context.respond('An error occured while executing this command. Please try again later.', ephemeral=True)
-        else:
-            await context.respond('An error occured while executing this command. Please try again later.', ephemeral=True)
-        raise exception
+        
+        print(exception)
+        traceback.print_exc()
+            
+
     
     bot.add_application_command(DCCommands)
     bot.activity = discord.Activity(name='with こはね', type=discord.ActivityType.playing)

@@ -20,23 +20,26 @@ class Sheet(commands.Cog):
         discord.SlashCommandOptionType.string,
         description="The sheet URL or sheet ID"
     )):
+        print(url)
         """Changes the sheet the bot uses"""
         if '/' in url:
             url = url.split('/')
             index = url.index('d')
             url = url[index + 1]
         url = url.strip()
+        
+        await ctx.defer(ephemeral=True)
 
         if url == '':
-            self.bot.config.setSheetId(ctx.guild.id, None)
-            await ctx.respond("Sheet id removed", ephemeral=True)
+            await self.bot.config.setSheetId(ctx.guild.id, None)
+            await ctx.followup.send("Sheet id removed", ephemeral=True)
             return
 
-        self.bot.config.setSheetId(ctx.guild.id, url)
+        await self.bot.config.setSheetId(ctx.guild.id, url)
         profile = self.bot.getProfile(ctx.guild.id)
         sheetTemplateID = await profile.getID(profile.refreshCreds(), url)
         
-        await ctx.respond("Sheet id changed to " + url, ephemeral=True)
+        await ctx.followup.send("Sheet id changed to " + url, ephemeral=True)
         
         if sheetTemplateID == None or sheetTemplateID not in self.ID_DIC:
             sendStr = "Sheet not recognized, make sure you're using a compatible sheet (one of mine or any 3rd party sheets) listed below and that commands work properly:\n" + \
@@ -49,7 +52,8 @@ class Sheet(commands.Cog):
             
         else:
             await ctx.followup.send(f'Sheet template recognized, automatically changed to {self.ID_DIC[sheetTemplateID]} profile', ephemeral=True)
-            self.bot.config.setRequestType(ctx.guild.id, self.ID_DIC[sheetTemplateID])
+            await self.bot.config.setRequestType(ctx.guild.id, self.ID_DIC[sheetTemplateID])
+
 
     @change.error
     async def change_error(self, ctx, error):

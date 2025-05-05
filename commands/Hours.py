@@ -21,7 +21,7 @@ class Hours(commands.Cog):
             user = ctx.author
 
         profile = self.bot.getProfile(ctx.guild.id)
-        sheetId = self.bot.config.getSheetId(ctx.guild.id)
+        sheetId = await self.bot.config.getSheetId(ctx.guild.id)
 
         if sheetId == None:
             await ctx.respond('No sheet set for this server')

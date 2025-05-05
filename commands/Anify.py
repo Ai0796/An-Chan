@@ -10,7 +10,7 @@ class Anify(commands.Cog):
     async def anify(self, ctx):
         guild = ctx.guild
 
-        self.bot.config.setRequestType(guild.id, 'An')
+        await self.bot.config.setRequestType(guild.id, 'An')
 
         await guild.me.edit(nick='杏ちゃん')
         await ctx.respond('The bot is now An')

@@ -14,7 +14,7 @@ class ChangeCheckIn(commands.Cog):
             return
         channel = str(ctx.channel.id)
         
-        self.bot.config.setCheckInChannel(ctx.guild.id, channel)
+        await self.bot.config.setCheckInChannel(ctx.guild.id, channel)
 
         await ctx.respond(f"Check In Channel changed to <#{channel}>", ephemeral=True)
         

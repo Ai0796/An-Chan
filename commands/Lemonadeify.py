@@ -10,7 +10,7 @@ class Lemonadeify(commands.Cog):
     async def lemonadify(self, ctx):
         guild = ctx.guild
 
-        self.bot.config.setRequestType(guild.id, 'Lemonade')
+        await self.bot.config.setRequestType(guild.id, 'Lemonade')
 
         await guild.me.edit(nick='Lemonade')
         await ctx.respond('The bot is now Lemonade in this server')

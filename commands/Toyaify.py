@@ -10,7 +10,7 @@ class Toyaify(commands.Cog):
     async def toyaify(self, ctx):
         guild = ctx.guild
 
-        self.bot.config.setRequestType(guild.id, 'Toya')
+        await self.bot.config.setRequestType(guild.id, 'Toya')
 
         await guild.me.edit(nick='冬弥くん')
         await ctx.respond('The bot is now Toya in this server')

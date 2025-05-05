@@ -15,7 +15,7 @@ class Pings(commands.Cog):
         start = time.time()
 
         profile = self.bot.getProfile(ctx.guild.id)
-        sheetId = self.bot.config.getSheetId(ctx.guild.id)
+        sheetId = await self.bot.config.getSheetId(ctx.guild.id)
 
         if sheetId == None:
             await ctx.respond('No sheet set for this server')

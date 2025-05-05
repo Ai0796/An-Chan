@@ -13,7 +13,7 @@ class ViewCheckIn(commands.Cog):
         await ctx.defer(ephemeral=True)
 
         profile = self.bot.getProfile(ctx.guild.id)
-        sheetId = self.bot.config.getSheetId(ctx.guild.id)
+        sheetId = await self.bot.config.getSheetId(ctx.guild.id)
 
         if sheetId == None:
             await ctx.respond('No sheet set for this server', ephemeral=True)
@@ -28,14 +28,19 @@ class ViewCheckIn(commands.Cog):
         index = min(self.bot.getNextIndex(timestamps, timestamp),
                     len(timestamps) - 1)
         
-        channelID = self.bot.config.getCheckInChannel(ctx.guild.id)
+        channelID = await self.bot.config.getCheckInChannel(ctx.guild.id)
+        
+        if channelID == None:
+            await ctx.respond('**ALERT** No check-in channel set for the server', ephemeral=True)
+        else:
+            await ctx.respond(f'Check In Channel: <#{channelID}>', ephemeral=True)
 
         if len(timestamps) == 0 or timestamp > timestamps[-1]:
             await ctx.followup.send('No Check Ins Found', ephemeral=True)
             return
         for i, roomData in enumerate(data[timestamps[index]].checkIns):
             view = CheckInButtons()
-            await view.asyncinit(self.bot, roomData, timestamps[index], i + 1, self.bot.checkInPrompts[ctx.guild.id], None, None, True)
+            await view.asyncinit(self.bot, roomData, timestamps[index], i + 1, self.bot.checkInPrompts.get(ctx.guild.id, []), None, None, True)
             if timestamp + 2700 < timestamps[index]:
                 await ctx.followup.send(f'Next scheduled hour in Room {i + 1} <t:{timestamps[index]}:R>',
                                         embed=view.comingUp(),
@@ -46,11 +51,6 @@ class ViewCheckIn(commands.Cog):
                                         ephemeral=True)
                 continue
             await ctx.followup.send(embed=view.generateEmbed(), ephemeral=True)
-            
-        if channelID == None:
-            await ctx.followup.send('**ALERT** No check-in channel set for the server', ephemeral=True)
-        else:
-            await ctx.followup.send(f'Check In Channel: <#{channelID}>', ephemeral=True)
 
 
 def setup(bot):

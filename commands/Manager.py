@@ -21,7 +21,7 @@ class Manager(commands.Cog):
         
         channel = str(ctx.channel.id)
         
-        self.bot.config.setManagerCheckInChannel(ctx.guild.id, channel)
+        await self.bot.config.setManagerCheckInChannel(ctx.guild.id, channel)
 
         await ctx.respond(f"Manage Ping Channel changed to <#{channel}>", ephemeral=True)
         
@@ -39,7 +39,7 @@ class Manager(commands.Cog):
         """Changes the manager in channel"""
         role = f'<@&{role.id}>'
         
-        self.bot.config.setManagerPing(ctx.guild.id, role)
+        await self.bot.config.setManagerPing(ctx.guild.id, role)
 
         await ctx.respond("Manage Ping Role changed to " + role, ephemeral=True)
 

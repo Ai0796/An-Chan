@@ -12,20 +12,21 @@ class Order(commands.Cog):
     async def order(self, ctx):
 
         start = time.time()
+        
+        await ctx.defer()
 
         profile = self.bot.getProfile(ctx.guild.id)
-        sheetId = self.bot.config.getSheetId(ctx.guild.id)
+        sheetId = await self.bot.config.getSheetId(ctx.guild.id)
 
         if sheetId == None:
-            await ctx.respond('No sheet set for this server')
+            await ctx.edit('No sheet set for this server')
             return
 
-        await ctx.defer()
         creds = profile.refreshCreds()
         data = await profile.main(creds, sheetId)
 
         if data is None:
-            await ctx.respond('No Orders Found or Error occured, please try again later.')
+            await ctx.edit('No Orders Found or Error occured, please try again later.')
             return
 
         timestamp = int(time.time())
@@ -35,10 +36,10 @@ class Order(commands.Cog):
                     len(timestamps) - 1)
 
         if len(timestamps) == 0 or timestamp > timestamps[-1] + 3600:
-            await ctx.respond('No Orders Found')
+            await ctx.edit('No Orders Found')
             return
         
-        runners = self.bot.config.getRunners(str(ctx.guild.id))
+        runners = await self.bot.config.getRunners(str(ctx.guild.id))
 
         view = OrderEmbed(data, timestamps, index, runners)
         view.generateEmbed(timestamps[index])

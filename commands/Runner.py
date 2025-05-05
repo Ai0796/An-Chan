@@ -19,7 +19,7 @@ class Runner(commands.Cog):
         
         guildid = str(ctx.guild.id)
 
-        runners = self.bot.config.addRunner(guildid, user)
+        runners = await self.bot.config.addRunner(guildid, user)
 
         await ctx.respond(f'Runner added: {user}')
         
@@ -35,7 +35,7 @@ class Runner(commands.Cog):
         
         guildid = str(ctx.guild.id)
 
-        runners = self.bot.config.removeRunner(guildid, user)
+        runners = await self.bot.config.removeRunner(guildid, user)
 
         await ctx.respond(f'Runner removed: {user}')
         
@@ -45,7 +45,7 @@ class Runner(commands.Cog):
     @runner.command(name="list", description="Lists the runners")
     async def list(self, ctx):
         guildid = str(ctx.guild.id)
-        runners = self.bot.config.getRunners(guildid)
+        runners = await self.bot.config.getRunners(guildid)
         
         runnerStr = '```\n' + '\n'.join(runners) + '```'
         await ctx.respond(runnerStr)
